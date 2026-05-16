@@ -105,7 +105,7 @@ function AuthScreen() {
     if (mode === "signup") {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) setError(error.message);
-      else setMessage("Account created! You can now sign in.");
+      else setMessage("Account created! Please check your email to confirm your account before signing in.");
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
@@ -197,7 +197,7 @@ function OnboardingScreen({ session, onComplete }) {
                 <option value="">Day</option>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
-              <input placeholder="Year" value={birthday.split(" ")[2] || ""} onChange={(e) => { const parts = birthday.split(" "); setBirthday(`${parts[0] || ""} ${parts[1] || ""} ${e.target.value}`.trim()); }} style={{ ...inputStyle, flex: 1 }} />
+              <input placeholder="Year" value={birthday.split(" ")[2] || ""} onChange={(e) => { const parts = birthday.split(" "); setBirthday(`${parts[0] || ""} ${parts[1] || ""} ${e.target.value.replace(/\D/g, "").slice(0, 4)}`.trim()); }} style={{ ...inputStyle, flex: 1 }} />
             </div>
           </div>
           <div>
@@ -830,7 +830,7 @@ function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack })
               <option value="">Day</option>
               {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
-            <input placeholder="Year" value={birthday.split(" ")[2] || ""} onChange={(e) => { const parts = birthday.split(" "); setBirthday(`${parts[0] || ""} ${parts[1] || ""} ${e.target.value}`.trim()); }} style={{ ...inputStyle, flex: 1 }} />
+            <input placeholder="Year" value={birthday.split(" ")[2] || ""} onChange={(e) => { const parts = birthday.split(" "); setBirthday(`${parts[0] || ""} ${parts[1] || ""} ${e.target.value.replace(/\D/g, "").slice(0, 4)}`.trim()); }} style={{ ...inputStyle, flex: 1 }} />
           </div>
         </div>
         <div><label style={labelStyle}>Address</label><input style={inputStyle} value={address} onChange={(e) => setAddress(e.target.value)} /></div>
@@ -908,7 +908,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
       minutes = h * 60 + m;
     }
     const isPast = minutes < currentMinutes;
-    const { data } = await supabase.from('routine_items').insert({
+    const { data, error } = await supabase.from('routine_items').insert({
       profile_id: session?.user?.id,
       section,
       label,
@@ -917,6 +917,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
       sort_order: Date.now(),
     }).select().single();
 
+    if (error) console.error('Routine insert error:', error);
     if (data) {
       setRoutineData((prev) => prev.map((g) => {
         if (g.section !== section) return g;
