@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 import { useState, useEffect } from "react";
-import { Bell, ClipboardList, Puzzle, Camera, ChevronDown, Settings, X, ChevronRight, Plus, Pill, Phone } from "lucide-react";
+import { Bell, ClipboardList, Puzzle, Camera, Settings, X, ChevronRight, Plus, Pill, Phone } from "lucide-react";
 
 const menuItems = [
   { label: "Reminders", icon: Bell },
@@ -284,74 +284,6 @@ function OnboardingScreen({ session, onComplete }) {
   );
 }
 
-// ── Today Overlay ──────────────────────────────────────────────────────────
-function TodayOverlay({ onClose }) {
-  useBodyScrollLock(true);
-  const [time, setTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-  const day = days[time.getDay()];
-  const month = months[time.getMonth()];
-  const date = time.getDate();
-  const year = time.getFullYear();
-  const hours = time.getHours();
-  const minutes = time.getMinutes().toString().padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const displayHour = hours % 12 || 12;
-  const greeting = hours < 12 ? "Good Morning" : hours < 17 ? "Good Afternoon" : "Good Evening";
-  const season = getSeason();
-  const seasonImage = seasonalImages[season][getSeasonalImageIndex()];
-  const firstDay = new Date(year, time.getMonth(), 1).getDay();
-  const daysInMonth = new Date(year, time.getMonth() + 1, 0).getDate();
-  const calendarCells = [];
-  for (let i = 0; i < firstDay; i++) calendarCells.push(null);
-  for (let i = 1; i <= daysInMonth; i++) calendarCells.push(i);
-
-  return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#fff", zIndex: 1000, overflowY: "hidden", maxWidth: "390px", margin: "0 auto", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", padding: "20px 20px 0 20px", flexShrink: 0 }}>
-        <X size={28} color="#555" style={{ cursor: "pointer" }} onClick={onClose} />
-      </div>
-      <div style={{ textAlign: "center", padding: "10px 20px 20px 20px", borderBottom: "1px solid #eee", flexShrink: 0 }}>
-        <p style={{ margin: "0 0 2px 0", fontSize: "17px", color: "#888" }}>{greeting}</p>
-        <h2 style={{ margin: "0 0 4px 0", fontSize: "28px", color: "#333" }}>{day}</h2>
-        <p style={{ margin: "0 0 6px 0", fontSize: "18px", color: "#555" }}>{month} {date}, {year}</p>
-        <p style={{ margin: 0, fontSize: "38px", fontWeight: "bold", color: "#333" }}>{displayHour}:{minutes} {ampm}</p>
-      </div>
-      <div style={{ padding: "16px 20px", borderBottom: "1px solid #eee", flexShrink: 0 }}>
-        <div style={{ borderRadius: "14px", overflow: "hidden", position: "relative" }}>
-          <img src={seasonImage} alt={season} style={{ width: "100%", height: "140px", objectFit: "cover", display: "block" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.5))", padding: "12px 16px" }}>
-            <p style={{ margin: 0, color: "white", fontSize: "16px" }}>It is currently {season}</p>
-          </div>
-        </div>
-      </div>
-      <div style={{ padding: "16px 20px 20px 20px", flex: 1 }}>
-        <h3 style={{ margin: "0 0 12px 0", fontSize: "18px", color: "#333", textAlign: "center" }}>{month} {year}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", textAlign: "center" }}>
-          {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
-            <div key={d} style={{ fontSize: "12px", color: "#aaa", paddingBottom: "6px" }}>{d}</div>
-          ))}
-          {calendarCells.map((cell, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: "30px", height: "30px", borderRadius: "50%", backgroundColor: cell === date ? "#4a90e2" : "transparent", color: cell === date ? "white" : cell ? "#333" : "transparent", fontWeight: cell === date ? "bold" : "normal", fontSize: "15px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {cell || ""}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Caregiver Transition ───────────────────────────────────────────────────
 function CaregiverTransition({ direction, onComplete }) {
   const [phase, setPhase] = useState("in");
@@ -360,7 +292,7 @@ function CaregiverTransition({ direction, onComplete }) {
     const t1 = setTimeout(() => setPhase("out"), 600);
     const t2 = setTimeout(() => onComplete(), 1100);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+  }, [onComplete]);
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: direction === "unlock" ? "#4a90e2" : "#333", zIndex: 2000, maxWidth: "390px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: phase === "in" ? 1 : 0, transition: "opacity 0.5s ease" }}>
       <p style={{ margin: 0, fontSize: "15px", color: "rgba(255,255,255,0.9)", fontWeight: "500", letterSpacing: "0.05em" }}>
@@ -1754,7 +1686,7 @@ function SeasonCard() {
   const season = getSeason();
   const images = seasonalHomeImages[season];
   const [index, setIndex] = useState(0);
-  useEffect(() => { const t = setInterval(() => setIndex((prev) => (prev + 1) % images.length), 4000); return () => clearInterval(t); }, [season]);
+  useEffect(() => { const t = setInterval(() => setIndex((prev) => (prev + 1) % images.length), 4000); return () => clearInterval(t); }, [season, images.length]);
   const seasonColors = {
     Spring: { bg: "#f0faf0", label: "#4a9e5c", border: "#c8e6c9" },
     Summer: { bg: "#fff8ee", label: "#d4900a", border: "#fde8c0" },
