@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
-import { useState, useEffect } from "react";
-import { Bell, ClipboardList, Puzzle, Camera, ChevronDown, Settings, X, ChevronRight, Plus, Pill, Phone } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Bell, ClipboardList, Puzzle, Camera, Settings, X, ChevronRight, Plus, Pill, Phone } from "lucide-react";
 
 const menuItems = [
   { label: "Reminders", icon: Bell },
@@ -82,6 +82,32 @@ async function uploadToStorage(file, userId, folder) {
   if (error) { console.error('Upload error:', error); return null; }
   const { data } = supabase.storage.from('photos').getPublicUrl(fileName);
   return data.publicUrl;
+}
+
+// ── Welcome Screen (shown once after onboarding) ───────────────────────────
+function WelcomeScreen({ name, onDone }) {
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setFading(true), 1800);
+    const t2 = setTimeout(() => onDone(), 2400);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [onDone]);
+
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: "#4a90e2", zIndex: 3000,
+      maxWidth: "390px", margin: "0 auto",
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      opacity: fading ? 0 : 1,
+      transition: "opacity 0.6s ease",
+    }}>
+      <p style={{ margin: "0 0 10px 0", fontSize: "17px", color: "rgba(255,255,255,0.8)", fontFamily: "'Inter', sans-serif" }}>Welcome to Remembrit</p>
+      <h1 style={{ margin: 0, fontSize: "38px", fontWeight: "600", color: "white", fontFamily: "'Inter', sans-serif" }}>{name}</h1>
+    </div>
+  );
 }
 
 // ── Auth Screen ────────────────────────────────────────────────────────────
@@ -284,83 +310,19 @@ function OnboardingScreen({ session, onComplete }) {
   );
 }
 
-// ── Today Overlay ──────────────────────────────────────────────────────────
-function TodayOverlay({ onClose }) {
-  useBodyScrollLock(true);
-  const [time, setTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-  const day = days[time.getDay()];
-  const month = months[time.getMonth()];
-  const date = time.getDate();
-  const year = time.getFullYear();
-  const hours = time.getHours();
-  const minutes = time.getMinutes().toString().padStart(2, "0");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const displayHour = hours % 12 || 12;
-  const greeting = hours < 12 ? "Good Morning" : hours < 17 ? "Good Afternoon" : "Good Evening";
-  const season = getSeason();
-  const seasonImage = seasonalImages[season][getSeasonalImageIndex()];
-  const firstDay = new Date(year, time.getMonth(), 1).getDay();
-  const daysInMonth = new Date(year, time.getMonth() + 1, 0).getDate();
-  const calendarCells = [];
-  for (let i = 0; i < firstDay; i++) calendarCells.push(null);
-  for (let i = 1; i <= daysInMonth; i++) calendarCells.push(i);
-
-  return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#fff", zIndex: 1000, overflowY: "hidden", maxWidth: "390px", margin: "0 auto", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", padding: "20px 20px 0 20px", flexShrink: 0 }}>
-        <X size={28} color="#555" style={{ cursor: "pointer" }} onClick={onClose} />
-      </div>
-      <div style={{ textAlign: "center", padding: "10px 20px 20px 20px", borderBottom: "1px solid #eee", flexShrink: 0 }}>
-        <p style={{ margin: "0 0 2px 0", fontSize: "17px", color: "#888" }}>{greeting}</p>
-        <h2 style={{ margin: "0 0 4px 0", fontSize: "28px", color: "#333" }}>{day}</h2>
-        <p style={{ margin: "0 0 6px 0", fontSize: "18px", color: "#555" }}>{month} {date}, {year}</p>
-        <p style={{ margin: 0, fontSize: "38px", fontWeight: "bold", color: "#333" }}>{displayHour}:{minutes} {ampm}</p>
-      </div>
-      <div style={{ padding: "16px 20px", borderBottom: "1px solid #eee", flexShrink: 0 }}>
-        <div style={{ borderRadius: "14px", overflow: "hidden", position: "relative" }}>
-          <img src={seasonImage} alt={season} style={{ width: "100%", height: "140px", objectFit: "cover", display: "block" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.5))", padding: "12px 16px" }}>
-            <p style={{ margin: 0, color: "white", fontSize: "16px" }}>It is currently {season}</p>
-          </div>
-        </div>
-      </div>
-      <div style={{ padding: "16px 20px 20px 20px", flex: 1 }}>
-        <h3 style={{ margin: "0 0 12px 0", fontSize: "18px", color: "#333", textAlign: "center" }}>{month} {year}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", textAlign: "center" }}>
-          {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
-            <div key={d} style={{ fontSize: "12px", color: "#aaa", paddingBottom: "6px" }}>{d}</div>
-          ))}
-          {calendarCells.map((cell, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: "30px", height: "30px", borderRadius: "50%", backgroundColor: cell === date ? "#4a90e2" : "transparent", color: cell === date ? "white" : cell ? "#333" : "transparent", fontWeight: cell === date ? "bold" : "normal", fontSize: "15px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {cell || ""}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Caregiver Transition ───────────────────────────────────────────────────
 function CaregiverTransition({ direction, onComplete }) {
   const [phase, setPhase] = useState("in");
+
+  const stableOnComplete = useCallback(onComplete, [onComplete]);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
     const t1 = setTimeout(() => setPhase("out"), 600);
-    const t2 = setTimeout(() => onComplete(), 1100);
+    const t2 = setTimeout(() => stableOnComplete(), 1100);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+  }, [stableOnComplete]);
+
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: direction === "unlock" ? "#4a90e2" : "#333", zIndex: 2000, maxWidth: "390px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: phase === "in" ? 1 : 0, transition: "opacity 0.5s ease" }}>
       <p style={{ margin: 0, fontSize: "15px", color: "rgba(255,255,255,0.9)", fontWeight: "500", letterSpacing: "0.05em" }}>
@@ -583,6 +545,9 @@ function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedRem
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Medications</h2>
       </div>
       <div style={{ padding: "24px 20px" }}>
+        {medicationList.length === 0 && (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No medications yet.</p>
+        )}
         {medicationList.map((m) => (
           <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div>
@@ -647,6 +612,9 @@ function CaregiverContactsPage({ contactList, setContactList, session, onBack })
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Contacts</h2>
       </div>
       <div style={{ padding: "24px 20px" }}>
+        {contactList.length === 0 && (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No contacts yet.</p>
+        )}
         {contactList.map((c) => (
           <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div>
@@ -720,6 +688,9 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Family Photos</h2>
       </div>
       <div style={{ padding: "20px" }}>
+        {familyMembers.length === 0 && (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No photos added yet.</p>
+        )}
         {familyMembers.map((member) => (
           <div key={member.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div style={{ width: "52px", height: "52px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: "#ddd" }}>
@@ -944,6 +915,9 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
             <div key={group.section} style={{ marginBottom: "24px" }}>
               <p style={{ margin: "0 0 10px 0", fontSize: "13px", fontWeight: "600", color: colors.label, textTransform: "uppercase", letterSpacing: "0.06em" }}>{group.section}</p>
               <div style={{ backgroundColor: colors.bg, borderRadius: "16px", border: `1px solid ${colors.border}`, overflow: "hidden", marginBottom: "10px" }}>
+                {group.items.length === 0 && (
+                  <p style={{ margin: 0, padding: "16px", fontSize: "14px", color: "#bbb", textAlign: "center" }}>No activities yet.</p>
+                )}
                 {group.items.map((item, index) => (
                   <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: index < group.items.length - 1 ? `1px solid ${colors.border}` : "none", opacity: item.done ? 0.45 : 1 }}>
                     <div style={{ flex: 1 }}>
@@ -973,6 +947,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
 function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminders, sharedRoutine, setSharedRoutine, sharedMedications, setSharedMedications, sharedContacts, setSharedContacts, sharedPatientInfo, setSharedPatientInfo, familyMembers, setFamilyMembers }) {
   useBodyScrollLock(true);
   const [activePage, setActivePage] = useState(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const reminders = sharedReminders;
   const setReminders = setSharedReminders;
@@ -1007,10 +982,7 @@ function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminde
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#fff", zIndex: 1100, overflowY: "auto", maxWidth: "390px", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px", borderBottom: "1px solid #eee" }}>
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Caregiver View</h2>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={onLock} style={{ padding: "8px 16px", borderRadius: "20px", border: "1px solid #eee", backgroundColor: "#f5f5f5", fontSize: "14px", color: "#888", cursor: "pointer", fontFamily: "inherit" }}>Lock</button>
-          <button onClick={() => supabase.auth.signOut()} style={{ padding: "8px 16px", borderRadius: "20px", border: "1px solid #eee", backgroundColor: "#f5f5f5", fontSize: "14px", color: "#e25555", cursor: "pointer", fontFamily: "inherit" }}>Sign Out</button>
-        </div>
+        <button onClick={onLock} style={{ padding: "8px 16px", borderRadius: "20px", border: "1px solid #eee", backgroundColor: "#f5f5f5", fontSize: "14px", color: "#888", cursor: "pointer", fontFamily: "inherit" }}>Lock</button>
       </div>
       <div style={{ padding: "24px 20px" }}>
         <div style={{ backgroundColor: "#f0f4ff", borderRadius: "16px", padding: "20px", marginBottom: "24px" }}>
@@ -1052,6 +1024,23 @@ function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminde
             );
           })}
         </div>
+
+        {/* Sign out — buried at bottom, requires confirmation */}
+        <div style={{ marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f0f0f0", textAlign: "center" }}>
+          {!showSignOutConfirm ? (
+            <button onClick={() => setShowSignOutConfirm(true)} style={{ background: "none", border: "none", fontSize: "13px", color: "#ccc", cursor: "pointer", fontFamily: "inherit" }}>
+              Sign Out
+            </button>
+          ) : (
+            <div>
+              <p style={{ margin: "0 0 12px 0", fontSize: "14px", color: "#888" }}>Are you sure you want to sign out?</p>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+                <button onClick={() => supabase.auth.signOut()} style={{ padding: "10px 20px", borderRadius: "10px", border: "none", backgroundColor: "#e25555", color: "white", fontSize: "14px", cursor: "pointer", fontFamily: "inherit", fontWeight: "500" }}>Sign Out</button>
+                <button onClick={() => setShowSignOutConfirm(false)} style={{ padding: "10px 20px", borderRadius: "10px", border: "none", backgroundColor: "#f0f0f0", color: "#888", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1073,6 +1062,7 @@ function SettingsPage({ title, onClose, children }) {
 function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders, sharedRoutine, setSharedRoutine, sharedMedications, setSharedMedications, sharedContacts, setSharedContacts, sharedPatientInfo, setSharedPatientInfo, familyMembers, setFamilyMembers }) {
   useBodyScrollLock(true);
   const [page, setPage] = useState(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   if (page === "photos") return <FamilyMembersPage familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} session={session} onBack={() => setPage(null)} />;
 
@@ -1107,7 +1097,9 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
   if (page === "medications") {
     return (
       <SettingsPage title="My Medications" onClose={() => setPage(null)}>
-        {sharedMedications.map((med) => (
+        {sharedMedications.length === 0 ? (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginTop: "20px" }}>No medications yet.</p>
+        ) : sharedMedications.map((med) => (
           <div key={med.id} style={{ backgroundColor: "#f9f9f9", borderRadius: "12px", padding: "16px", marginBottom: "12px" }}>
             <p style={{ margin: "0 0 4px 0", fontSize: "20px", color: "#333", fontWeight: "bold" }}>{med.name}</p>
             <p style={{ margin: 0, fontSize: "16px", color: "#888" }}>{med.dosage} — {med.time}</p>
@@ -1120,11 +1112,33 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
   if (page === "contacts") {
     return (
       <SettingsPage title="My Contacts" onClose={() => setPage(null)}>
-        {sharedContacts.map((contact) => (
+        {sharedContacts.length === 0 ? (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginTop: "20px" }}>No contacts yet.</p>
+        ) : sharedContacts.map((contact) => (
           <div key={contact.id} style={{ backgroundColor: "#f9f9f9", borderRadius: "12px", padding: "16px", marginBottom: "12px" }}>
             <p style={{ margin: "0 0 4px 0", fontSize: "20px", color: "#333", fontWeight: "bold" }}>{contact.name}</p>
             <p style={{ margin: "0 0 4px 0", fontSize: "15px", color: "#888" }}>{contact.relationship}</p>
             <p style={{ margin: 0, fontSize: "16px", color: "#555" }}>{contact.phone}</p>
+          </div>
+        ))}
+      </SettingsPage>
+    );
+  }
+
+  if (page === "photosView") {
+    return (
+      <SettingsPage title="Family Photos" onClose={() => setPage(null)}>
+        {familyMembers.length === 0 ? (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginTop: "20px" }}>No photos added yet.</p>
+        ) : familyMembers.map((member) => (
+          <div key={member.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
+            <div style={{ width: "52px", height: "52px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: "#ddd" }}>
+              <img src={member.image} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+            <div>
+              <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#333" }}>{member.name}</p>
+              <p style={{ margin: 0, fontSize: "13px", color: "#aaa" }}>{member.relationship}</p>
+            </div>
           </div>
         ))}
       </SettingsPage>
@@ -1176,7 +1190,7 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
           { key: "personal", label: "Personal Information", icon: Settings },
           { key: "medications", label: "My Medications", icon: Pill },
           { key: "contacts", label: "My Contacts", icon: Phone },
-          { key: "photos", label: "Family Photos", icon: Camera },
+          { key: "photosView", label: "Family Photos", icon: Camera },
           { key: "caregiver", label: "Caregiver Access", icon: ChevronRight },
         ].map((item) => {
           const Icon = item.icon;
@@ -1191,9 +1205,24 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
           );
         })}
       </div>
-      <div style={{ textAlign: "center", padding: "30px 20px" }}>
-        <p style={{ margin: 0, fontSize: "12px", color: "#bbb" }}>Remembrit</p>
-        <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: "#ccc" }}>Version 0.1.0</p>
+
+      {/* Sign out — buried at bottom, requires confirmation */}
+      <div style={{ textAlign: "center", padding: "30px 20px 20px 20px" }}>
+        <p style={{ margin: "0 0 2px 0", fontSize: "12px", color: "#bbb" }}>Remembrit</p>
+        <p style={{ margin: "0 0 24px 0", fontSize: "11px", color: "#ccc" }}>Version 0.1.0</p>
+        {!showSignOutConfirm ? (
+          <button onClick={() => setShowSignOutConfirm(true)} style={{ background: "none", border: "none", fontSize: "13px", color: "#ccc", cursor: "pointer", fontFamily: "inherit" }}>
+            Sign Out
+          </button>
+        ) : (
+          <div>
+            <p style={{ margin: "0 0 12px 0", fontSize: "14px", color: "#888" }}>Are you sure you want to sign out?</p>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              <button onClick={() => supabase.auth.signOut()} style={{ padding: "10px 20px", borderRadius: "10px", border: "none", backgroundColor: "#e25555", color: "white", fontSize: "14px", cursor: "pointer", fontFamily: "inherit", fontWeight: "500" }}>Sign Out</button>
+              <button onClick={() => setShowSignOutConfirm(false)} style={{ padding: "10px 20px", borderRadius: "10px", border: "none", backgroundColor: "#f0f0f0", color: "#888", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1754,7 +1783,10 @@ function SeasonCard() {
   const season = getSeason();
   const images = seasonalHomeImages[season];
   const [index, setIndex] = useState(0);
-  useEffect(() => { const t = setInterval(() => setIndex((prev) => (prev + 1) % images.length), 4000); return () => clearInterval(t); }, [season]);
+  useEffect(() => {
+    const t = setInterval(() => setIndex((prev) => (prev + 1) % images.length), 4000);
+    return () => clearInterval(t);
+  }, [season, images.length]);
   const seasonColors = {
     Spring: { bg: "#f0faf0", label: "#4a9e5c", border: "#c8e6c9" },
     Summer: { bg: "#fff8ee", label: "#d4900a", border: "#fde8c0" },
@@ -1763,12 +1795,12 @@ function SeasonCard() {
   };
   const colors = seasonColors[season];
   return (
-    <div style={{ margin: "0 20px 20px 20px", borderRadius: "20px", overflow: "hidden", border: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
-      <div style={{ position: "relative", height: "160px", overflow: "hidden" }}>
+    <div style={{ margin: "0 20px 16px 20px", borderRadius: "20px", overflow: "hidden", border: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+      <div style={{ position: "relative", height: "140px", overflow: "hidden" }}>
         <img key={index} src={images[index]} alt={season} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(transparent 40%, rgba(0,0,0,0.45))" }} />
         <div style={{ position: "absolute", bottom: "12px", left: "16px" }}>
-          <p style={{ margin: 0, fontSize: "22px", fontWeight: "600", color: "white" }}>It is {season}</p>
+          <p style={{ margin: 0, fontSize: "20px", fontWeight: "600", color: "white" }}>It is {season}</p>
         </div>
         <div style={{ position: "absolute", bottom: "14px", right: "14px", display: "flex", gap: "6px" }}>
           {images.map((_, i) => (
@@ -1785,7 +1817,7 @@ function LiveClock() {
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
   const h = time.getHours(); const m = time.getMinutes().toString().padStart(2, "0");
   const ampm = h >= 12 ? "PM" : "AM"; const displayH = h % 12 || 12;
-  return <p style={{ margin: 0, fontSize: "40px", fontWeight: "700", color: "#333" }}>{displayH}:{m} {ampm}</p>;
+  return <p style={{ margin: 0, fontSize: "38px", fontWeight: "700", color: "#333" }}>{displayH}:{m} {ampm}</p>;
 }
 
 // ── App ────────────────────────────────────────────────────────────────────
@@ -1793,6 +1825,7 @@ function App() {
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showReminders, setShowReminders] = useState(false);
   const [showRoutine, setShowRoutine] = useState(false);
@@ -1830,9 +1863,7 @@ function App() {
         // Patient info — check if onboarded
         let { data: info } = await supabase.from('patient_info').select('*').eq('profile_id', session.user.id).single();
         if (!info) {
-          // Brand new account — show onboarding
           setShowOnboarding(true);
-          // Still need to load defaults for other tables below, but skip patient info
         } else {
           if (!info.onboarded) {
             setShowOnboarding(true);
@@ -1950,6 +1981,12 @@ function App() {
     if (label === "Games") setShowGames(true);
   };
 
+  const handleOnboardingComplete = useCallback((info) => {
+    setSharedPatientInfo({ ...info, profileId: session.user.id });
+    setShowOnboarding(false);
+    setShowWelcome(true);
+  }, [session]);
+
   if (authLoading) {
     return (
       <div style={{ maxWidth: "390px", margin: "0 auto", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif" }}>
@@ -1961,62 +1998,64 @@ function App() {
   if (!session) return <AuthScreen />;
 
   if (showOnboarding) {
-    return <OnboardingScreen session={session} onComplete={(info) => {
-      setSharedPatientInfo({ ...info, profileId: session.user.id });
-      setShowOnboarding(false);
-    }} />;
+    return <OnboardingScreen session={session} onComplete={handleOnboardingComplete} />;
   }
 
   return (
     <div style={{ maxWidth: "390px", margin: "0 auto", fontFamily: "'Inter', sans-serif", backgroundColor: "#fff", minHeight: "100vh" }}>
+      {showWelcome && (
+        <WelcomeScreen name={sharedPatientInfo.name} onDone={() => setShowWelcome(false)} />
+      )}
       {showSettings && <SettingsScreen onClose={() => setShowSettings(false)} session={session} sharedReminders={sharedReminders} setSharedReminders={setSharedReminders} sharedRoutine={sharedRoutine} setSharedRoutine={setSharedRoutine} sharedMedications={sharedMedications} setSharedMedications={setSharedMedications} sharedContacts={sharedContacts} setSharedContacts={setSharedContacts} sharedPatientInfo={sharedPatientInfo} setSharedPatientInfo={setSharedPatientInfo} familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} />}
       {showReminders && <RemindersOverlay onClose={() => setShowReminders(false)} reminders={sharedReminders} setReminders={setSharedReminders} session={session} />}
       {showRoutine && <RoutineOverlay onClose={() => setShowRoutine(false)} routineData={sharedRoutine} />}
       {showPhotos && <PhotosOverlay onClose={() => setShowPhotos(false)} familyMembers={familyMembers} />}
       {showGames && <GamesOverlay onClose={() => setShowGames(false)} />}
 
-      <div style={{ padding: "52px 24px 20px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      {/* Header — reduced top padding for height fix */}
+      <div style={{ padding: "44px 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#aaa" }}>{greeting}</p>
-          <h1 style={{ margin: 0, fontSize: "30px", color: "#333", fontWeight: "600" }}>{sharedPatientInfo.name}</h1>
+          <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#aaa" }}>{greeting}</p>
+          <h1 style={{ margin: 0, fontSize: "28px", color: "#333", fontWeight: "600" }}>{sharedPatientInfo.name}</h1>
         </div>
-        <Settings size={24} color="#aaa" style={{ cursor: "pointer", marginTop: "6px" }} onClick={() => setShowSettings(true)} />
+        <Settings size={24} color="#aaa" style={{ cursor: "pointer", marginTop: "4px" }} onClick={() => setShowSettings(true)} />
       </div>
 
-      <div style={{ margin: "0 20px 20px 20px", backgroundColor: "#f0f4ff", borderRadius: "20px", padding: "20px 24px" }}>
-        <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#7a9fd4" }}>{dayName}</p>
-        <p style={{ margin: "0 0 12px 0", fontSize: "20px", color: "#333", fontWeight: "500" }}>{monthName} {dateNum}, {year}</p>
+      {/* Date/time card — slightly reduced padding */}
+      <div style={{ margin: "0 20px 16px 20px", backgroundColor: "#f0f4ff", borderRadius: "20px", padding: "16px 24px" }}>
+        <p style={{ margin: "0 0 2px 0", fontSize: "14px", color: "#7a9fd4" }}>{dayName}</p>
+        <p style={{ margin: "0 0 10px 0", fontSize: "18px", color: "#333", fontWeight: "500" }}>{monthName} {dateNum}, {year}</p>
         <LiveClock />
       </div>
 
       <SeasonCard />
 
       {(upcomingReminders.length > 0 || nextRoutineItem || nextMedication) && (
-        <div style={{ margin: "0 20px 20px 20px" }}>
-          <p style={{ margin: "0 0 12px 0", fontSize: "13px", fontWeight: "600", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em" }}>Up Next</p>
+        <div style={{ margin: "0 20px 16px 20px" }}>
+          <p style={{ margin: "0 0 10px 0", fontSize: "13px", fontWeight: "600", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em" }}>Up Next</p>
           {upcomingReminders.map((r) => (
-            <div key={r.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", backgroundColor: "#f9f9f9", borderRadius: "14px", marginBottom: "10px" }}>
+            <div key={r.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "12px 16px", backgroundColor: "#f9f9f9", borderRadius: "14px", marginBottom: "8px" }}>
               <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#4a90e2", flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#333" }}>{r.label}</p>
+                <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#333" }}>{r.label}</p>
                 {r.time && <p style={{ margin: 0, fontSize: "13px", color: "#aaa" }}>{r.time}</p>}
               </div>
             </div>
           ))}
           {nextRoutineItem && (
-            <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", backgroundColor: "#fff8ee", borderRadius: "14px", marginBottom: "10px", border: "1px solid #fde8c0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "12px 16px", backgroundColor: "#fff8ee", borderRadius: "14px", marginBottom: "8px", border: "1px solid #fde8c0" }}>
               <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#d4900a", flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#333" }}>{nextRoutineItem.label}</p>
+                <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#333" }}>{nextRoutineItem.label}</p>
                 <p style={{ margin: 0, fontSize: "13px", color: "#d4900a" }}>{nextRoutineItem.time} · Routine</p>
               </div>
             </div>
           )}
           {nextMedication && (
-            <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", backgroundColor: "#f3f0ff", borderRadius: "14px", marginBottom: "10px", border: "1px solid #d8cff5" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "12px 16px", backgroundColor: "#f3f0ff", borderRadius: "14px", marginBottom: "8px", border: "1px solid #d8cff5" }}>
               <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#7c5cbf", flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#333" }}>{nextMedication.name} {nextMedication.dosage}</p>
+                <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#333" }}>{nextMedication.name} {nextMedication.dosage}</p>
                 <p style={{ margin: 0, fontSize: "13px", color: "#7c5cbf" }}>{nextMedication.time} · Medication</p>
               </div>
             </div>
@@ -2024,22 +2063,22 @@ function App() {
         </div>
       )}
 
-      <div style={{ padding: "0 20px 30px 20px" }}>
-        <p style={{ margin: "0 0 12px 0", fontSize: "13px", fontWeight: "600", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em" }}>Menu</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+      <div style={{ padding: "0 20px 24px 20px" }}>
+        <p style={{ margin: "0 0 10px 0", fontSize: "13px", fontWeight: "600", color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em" }}>Menu</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.label} onClick={() => handleMenuClick(item.label)} style={{ backgroundColor: "#f5f5f5", borderRadius: "16px", padding: "22px", textAlign: "center", cursor: "pointer" }}>
-                <Icon size={34} color="#555" />
-                <p style={{ fontSize: "17px", margin: "10px 0 0 0", color: "#333" }}>{item.label}</p>
+              <div key={item.label} onClick={() => handleMenuClick(item.label)} style={{ backgroundColor: "#f5f5f5", borderRadius: "16px", padding: "18px", textAlign: "center", cursor: "pointer" }}>
+                <Icon size={32} color="#555" />
+                <p style={{ fontSize: "16px", margin: "8px 0 0 0", color: "#333" }}>{item.label}</p>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div style={{ textAlign: "center", padding: "20px", borderTop: "1px solid #eee" }}>
+      <div style={{ textAlign: "center", padding: "16px", borderTop: "1px solid #eee" }}>
         <p style={{ margin: 0, fontSize: "12px", color: "#bbb" }}>Remembrit</p>
         <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: "#ccc" }}>Version 0.1.0</p>
       </div>
