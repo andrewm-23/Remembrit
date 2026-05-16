@@ -917,7 +917,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
       sort_order: Date.now(),
     }).select().single();
 
-    if (error) console.error('Routine insert error:', error);
+    if (error) console.error('Routine insert error:', JSON.stringify(error));
     if (data) {
       setRoutineData((prev) => prev.map((g) => {
         if (g.section !== section) return g;
