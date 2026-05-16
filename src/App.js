@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 import { useState, useEffect } from "react";
-import { Bell, ClipboardList, Puzzle, Camera, Settings, X, ChevronRight, Plus, Pill, Phone } from "lucide-react";
+import { Bell, ClipboardList, Puzzle, Camera, ChevronDown, Settings, X, ChevronRight, Plus, Pill, Phone } from "lucide-react";
 
 const menuItems = [
   { label: "Reminders", icon: Bell },
@@ -8,7 +8,7 @@ const menuItems = [
   { label: "Games", icon: Puzzle },
   { label: "Photos", icon: Camera },
 ];
-// eslint-disable-next-line no-unused-vars
+
 const seasonalImages = {
   Spring: ["https://picsum.photos/seed/spring1/400/200","https://picsum.photos/seed/spring2/400/200","https://picsum.photos/seed/spring3/400/200"],
   Summer: ["https://picsum.photos/seed/summer1/400/200","https://picsum.photos/seed/summer2/400/200","https://picsum.photos/seed/summer3/400/200"],
@@ -16,7 +16,6 @@ const seasonalImages = {
   Winter: ["https://picsum.photos/seed/winter1/400/200","https://picsum.photos/seed/winter2/400/200","https://picsum.photos/seed/winter3/400/200"],
 };
 
-// eslint-disable-next-line no-unused-vars
 const initialReminders = [
   { id: 1, label: "Take morning medication", time: "8:00 AM", date: "", repeat: "daily", section: "today", done: false },
   { id: 2, label: "Call Sarah", time: "10:30 AM", date: "", repeat: "none", section: "today", done: false },
@@ -61,7 +60,7 @@ function getSeason() {
   if (month >= 8 && month <= 10) return "Autumn";
   return "Winter";
 }
-// eslint-disable-next-line no-unused-vars
+
 function getSeasonalImageIndex() {
   const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
   return Math.floor(dayOfYear / 3) % 3;
@@ -105,7 +104,7 @@ function AuthScreen() {
     if (mode === "signup") {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) setError(error.message);
-      else setMessage("Account created! Please check your email to confirm your account before signing in.");
+      else setMessage("Account created! You can now sign in.");
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
@@ -197,7 +196,7 @@ function OnboardingScreen({ session, onComplete }) {
                 <option value="">Day</option>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
-              <input placeholder="Year" value={birthday.split(" ")[2] || ""} onChange={(e) => { const parts = birthday.split(" "); setBirthday(`${parts[0] || ""} ${parts[1] || ""} ${e.target.value.replace(/\D/g, "").slice(0, 4)}`.trim()); }} style={{ ...inputStyle, flex: 1 }} />
+              <input placeholder="Year" value={birthday.split(" ")[2] || ""} onChange={(e) => { const parts = birthday.split(" "); setBirthday(`${parts[0] || ""} ${parts[1] || ""} ${e.target.value}`.trim()); }} style={{ ...inputStyle, flex: 1 }} />
             </div>
           </div>
           <div>
@@ -285,6 +284,74 @@ function OnboardingScreen({ session, onComplete }) {
   );
 }
 
+// ── Today Overlay ──────────────────────────────────────────────────────────
+function TodayOverlay({ onClose }) {
+  useBodyScrollLock(true);
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  const day = days[time.getDay()];
+  const month = months[time.getMonth()];
+  const date = time.getDate();
+  const year = time.getFullYear();
+  const hours = time.getHours();
+  const minutes = time.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const displayHour = hours % 12 || 12;
+  const greeting = hours < 12 ? "Good Morning" : hours < 17 ? "Good Afternoon" : "Good Evening";
+  const season = getSeason();
+  const seasonImage = seasonalImages[season][getSeasonalImageIndex()];
+  const firstDay = new Date(year, time.getMonth(), 1).getDay();
+  const daysInMonth = new Date(year, time.getMonth() + 1, 0).getDate();
+  const calendarCells = [];
+  for (let i = 0; i < firstDay; i++) calendarCells.push(null);
+  for (let i = 1; i <= daysInMonth; i++) calendarCells.push(i);
+
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#fff", zIndex: 1000, overflowY: "hidden", maxWidth: "390px", margin: "0 auto", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", padding: "20px 20px 0 20px", flexShrink: 0 }}>
+        <X size={28} color="#555" style={{ cursor: "pointer" }} onClick={onClose} />
+      </div>
+      <div style={{ textAlign: "center", padding: "10px 20px 20px 20px", borderBottom: "1px solid #eee", flexShrink: 0 }}>
+        <p style={{ margin: "0 0 2px 0", fontSize: "17px", color: "#888" }}>{greeting}</p>
+        <h2 style={{ margin: "0 0 4px 0", fontSize: "28px", color: "#333" }}>{day}</h2>
+        <p style={{ margin: "0 0 6px 0", fontSize: "18px", color: "#555" }}>{month} {date}, {year}</p>
+        <p style={{ margin: 0, fontSize: "38px", fontWeight: "bold", color: "#333" }}>{displayHour}:{minutes} {ampm}</p>
+      </div>
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid #eee", flexShrink: 0 }}>
+        <div style={{ borderRadius: "14px", overflow: "hidden", position: "relative" }}>
+          <img src={seasonImage} alt={season} style={{ width: "100%", height: "140px", objectFit: "cover", display: "block" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.5))", padding: "12px 16px" }}>
+            <p style={{ margin: 0, color: "white", fontSize: "16px" }}>It is currently {season}</p>
+          </div>
+        </div>
+      </div>
+      <div style={{ padding: "16px 20px 20px 20px", flex: 1 }}>
+        <h3 style={{ margin: "0 0 12px 0", fontSize: "18px", color: "#333", textAlign: "center" }}>{month} {year}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", textAlign: "center" }}>
+          {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
+            <div key={d} style={{ fontSize: "12px", color: "#aaa", paddingBottom: "6px" }}>{d}</div>
+          ))}
+          {calendarCells.map((cell, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "30px", height: "30px", borderRadius: "50%", backgroundColor: cell === date ? "#4a90e2" : "transparent", color: cell === date ? "white" : cell ? "#333" : "transparent", fontWeight: cell === date ? "bold" : "normal", fontSize: "15px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {cell || ""}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Caregiver Transition ───────────────────────────────────────────────────
 function CaregiverTransition({ direction, onComplete }) {
   const [phase, setPhase] = useState("in");
@@ -293,7 +360,7 @@ function CaregiverTransition({ direction, onComplete }) {
     const t1 = setTimeout(() => setPhase("out"), 600);
     const t2 = setTimeout(() => onComplete(), 1100);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [onComplete]);
+  }, []);
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: direction === "unlock" ? "#4a90e2" : "#333", zIndex: 2000, maxWidth: "390px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: phase === "in" ? 1 : 0, transition: "opacity 0.5s ease" }}>
       <p style={{ margin: 0, fontSize: "15px", color: "rgba(255,255,255,0.9)", fontWeight: "500", letterSpacing: "0.05em" }}>
@@ -460,12 +527,7 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
         </div>
         {todayItems.length > 0 && <><SectionLabel label="Today" />{todayItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {upcomingItems.length > 0 && <><SectionLabel label="Upcoming" />{upcomingItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
-        {reminders.length === 0 && (
-          <div style={{ textAlign: "center", padding: "60px 24px" }}>
-            <p style={{ margin: "0 0 8px 0", fontSize: "17px", color: "#333" }}>No reminders yet</p>
-            <p style={{ margin: 0, fontSize: "14px", color: "#aaa" }}>Tap the button below to add the first reminder.</p>
-          </div>
-        )}
+        {reminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
         <div style={{ padding: "20px" }}>
           <button onClick={() => setShowAddSheet(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: "14px", borderRadius: "12px", backgroundColor: "#f5f5f5", border: "none", fontSize: "16px", color: "#555", cursor: "pointer", fontFamily: "inherit" }}>
             <Plus size={18} color="#555" /> Add Reminder
@@ -521,12 +583,6 @@ function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedRem
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Medications</h2>
       </div>
       <div style={{ padding: "24px 20px" }}>
-        {medicationList.length === 0 && (
-          <div style={{ textAlign: "center", padding: "40px 0 20px 0" }}>
-            <p style={{ margin: "0 0 8px 0", fontSize: "17px", color: "#333" }}>No medications yet</p>
-            <p style={{ margin: 0, fontSize: "14px", color: "#aaa" }}>Add medications using the form below.</p>
-          </div>
-        )}
         {medicationList.map((m) => (
           <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div>
@@ -591,12 +647,6 @@ function CaregiverContactsPage({ contactList, setContactList, session, onBack })
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Contacts</h2>
       </div>
       <div style={{ padding: "24px 20px" }}>
-        {contactList.length === 0 && (
-          <div style={{ textAlign: "center", padding: "40px 0 20px 0" }}>
-            <p style={{ margin: "0 0 8px 0", fontSize: "17px", color: "#333" }}>No contacts yet</p>
-            <p style={{ margin: 0, fontSize: "14px", color: "#aaa" }}>Add contacts using the form below.</p>
-          </div>
-        )}
         {contactList.map((c) => (
           <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div>
@@ -625,6 +675,7 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
   const [newImageFile, setNewImageFile] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState("");
   const [uploading, setUploading] = useState(false);
+
   const inputStyle = { width: "100%", padding: "12px 14px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
 
   const handleImageChange = async (e, id) => {
@@ -720,34 +771,6 @@ function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack })
   const [pin, setPin] = useState(patientInfo.pin || "1234");
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deletePassword, setDeletePassword] = useState("");
-  const [deleteError, setDeleteError] = useState("");
-  const [deleting, setDeleting] = useState(false);
-
-  const handleDeleteAccount = async () => {
-    setDeleting(true);
-    setDeleteError("");
-    try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: session.user.email,
-        password: deletePassword,
-      });
-      if (signInError) { setDeleteError("Incorrect password. Try again."); setDeleting(false); return; }
-      const uid = session.user.id;
-      await supabase.from('reminders').delete().eq('profile_id', uid);
-      await supabase.from('medications').delete().eq('profile_id', uid);
-      await supabase.from('contacts').delete().eq('profile_id', uid);
-      await supabase.from('routine_items').delete().eq('profile_id', uid);
-      await supabase.from('family_members').delete().eq('profile_id', uid);
-      await supabase.from('patient_info').delete().eq('profile_id', uid);
-      await supabase.from('profiles').delete().eq('id', uid);
-      await supabase.auth.signOut();
-    } catch (err) {
-      setDeleteError("Something went wrong. Please try again.");
-    }
-    setDeleting(false);
-  };
 
   useEffect(() => {
     setName(patientInfo.name);
@@ -830,7 +853,7 @@ function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack })
               <option value="">Day</option>
               {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
-            <input placeholder="Year" value={birthday.split(" ")[2] || ""} onChange={(e) => { const parts = birthday.split(" "); setBirthday(`${parts[0] || ""} ${parts[1] || ""} ${e.target.value.replace(/\D/g, "").slice(0, 4)}`.trim()); }} style={{ ...inputStyle, flex: 1 }} />
+            <input placeholder="Year" value={birthday.split(" ")[2] || ""} onChange={(e) => { const parts = birthday.split(" "); setBirthday(`${parts[0] || ""} ${parts[1] || ""} ${e.target.value}`.trim()); }} style={{ ...inputStyle, flex: 1 }} />
           </div>
         </div>
         <div><label style={labelStyle}>Address</label><input style={inputStyle} value={address} onChange={(e) => setAddress(e.target.value)} /></div>
@@ -841,32 +864,6 @@ function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack })
         <button onClick={handleSave} disabled={uploading} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "none", backgroundColor: saved ? "#5cb85c" : "#4a90e2", color: "white", fontSize: "16px", fontWeight: "600", cursor: "pointer", fontFamily: "inherit", transition: "background-color 0.3s" }}>
           {uploading ? "Saving..." : saved ? "Saved" : "Save Changes"}
         </button>
-
-        {!showDeleteConfirm ? (
-          <button onClick={() => setShowDeleteConfirm(true)} style={{ background: "none", border: "none", width: "100%", marginTop: "8px", padding: "12px", fontSize: "13px", color: "#ccc", cursor: "pointer", fontFamily: "inherit" }}>
-            Delete Account
-          </button>
-        ) : (
-          <div style={{ marginTop: "16px", padding: "20px", backgroundColor: "#fff5f5", borderRadius: "12px", border: "1px solid #fdd" }}>
-            <p style={{ margin: "0 0 6px 0", fontSize: "15px", color: "#c0392b", fontWeight: "600" }}>Delete account?</p>
-            <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#888", lineHeight: "1.5" }}>This will permanently delete all data including reminders, medications, contacts, routine, and photos. This cannot be undone.</p>
-            <p style={{ margin: "0 0 6px 0", fontSize: "13px", color: "#aaa", fontWeight: "500" }}>Enter your Remembrit password to confirm</p>
-            <input
-              type="password"
-              placeholder="Password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              style={{ width: "100%", padding: "12px 14px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fff", boxSizing: "border-box", outline: "none", marginBottom: "12px" }}
-            />
-            {deleteError && <p style={{ margin: "0 0 12px 0", fontSize: "13px", color: "#e25555" }}>{deleteError}</p>}
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", backgroundColor: "#f0f0f0", color: "#888", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
-              <button onClick={handleDeleteAccount} disabled={!deletePassword || deleting} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", backgroundColor: deletePassword && !deleting ? "#e25555" : "#ddd", color: deletePassword && !deleting ? "white" : "#aaa", fontSize: "14px", fontWeight: "600", cursor: deletePassword && !deleting ? "pointer" : "default", fontFamily: "inherit" }}>
-                {deleting ? "Deleting..." : "Delete Everything"}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -908,7 +905,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
       minutes = h * 60 + m;
     }
     const isPast = minutes < currentMinutes;
-    const { data, error } = await supabase.from('routine_items').insert({
+    const { data } = await supabase.from('routine_items').insert({
       profile_id: session?.user?.id,
       section,
       label,
@@ -917,7 +914,6 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
       sort_order: Date.now(),
     }).select().single();
 
-    if (error) console.error('Routine insert error:', JSON.stringify(error));
     if (data) {
       setRoutineData((prev) => prev.map((g) => {
         if (g.section !== section) return g;
@@ -947,7 +943,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
           return (
             <div key={group.section} style={{ marginBottom: "24px" }}>
               <p style={{ margin: "0 0 10px 0", fontSize: "13px", fontWeight: "600", color: colors.label, textTransform: "uppercase", letterSpacing: "0.06em" }}>{group.section}</p>
-              {group.items.length > 0 && <div style={{ backgroundColor: colors.bg, borderRadius: "16px", border: `1px solid ${colors.border}`, overflow: "hidden", marginBottom: "10px" }}>
+              <div style={{ backgroundColor: colors.bg, borderRadius: "16px", border: `1px solid ${colors.border}`, overflow: "hidden", marginBottom: "10px" }}>
                 {group.items.map((item, index) => (
                   <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: index < group.items.length - 1 ? `1px solid ${colors.border}` : "none", opacity: item.done ? 0.45 : 1 }}>
                     <div style={{ flex: 1 }}>
@@ -957,7 +953,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
                     <button onClick={() => deleteItem(group.section, item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "18px", flexShrink: 0 }}>✕</button>
                   </div>
                 ))}
-              </div>}
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <input style={inputStyle} placeholder="New activity" value={newLabels[group.section]} onChange={(e) => setNewLabels((prev) => ({ ...prev, [group.section]: e.target.value }))} />
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -1396,12 +1392,7 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
         </div>
         {todayItems.length > 0 && <><SectionLabel label="Today" />{todayItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {upcomingItems.length > 0 && <><SectionLabel label="Upcoming" />{upcomingItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
-        {reminders.length === 0 && (
-          <div style={{ textAlign: "center", padding: "60px 24px" }}>
-            <p style={{ margin: "0 0 8px 0", fontSize: "17px", color: "#333" }}>No reminders yet</p>
-            <p style={{ margin: 0, fontSize: "14px", color: "#aaa" }}>Tap the button below to add your first reminder.</p>
-          </div>
-        )}
+        {reminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
         <div style={{ padding: "20px" }}>
           <button onClick={() => setShowAddSheet(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: "14px", borderRadius: "12px", backgroundColor: "#f5f5f5", border: "none", fontSize: "16px", color: "#555", cursor: "pointer", fontFamily: "inherit" }}>
             <Plus size={18} color="#555" /> Add Reminder
@@ -1763,7 +1754,7 @@ function SeasonCard() {
   const season = getSeason();
   const images = seasonalHomeImages[season];
   const [index, setIndex] = useState(0);
-  useEffect(() => { const t = setInterval(() => setIndex((prev) => (prev + 1) % images.length), 4000); return () => clearInterval(t); }, [season, images.length]);
+  useEffect(() => { const t = setInterval(() => setIndex((prev) => (prev + 1) % images.length), 4000); return () => clearInterval(t); }, [season]);
   const seasonColors = {
     Spring: { bg: "#f0faf0", label: "#4a9e5c", border: "#c8e6c9" },
     Summer: { bg: "#fff8ee", label: "#d4900a", border: "#fde8c0" },
@@ -1802,7 +1793,6 @@ function App() {
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showReminders, setShowReminders] = useState(false);
   const [showRoutine, setShowRoutine] = useState(false);
@@ -1844,7 +1834,7 @@ function App() {
           setShowOnboarding(true);
           // Still need to load defaults for other tables below, but skip patient info
         } else {
-          if (info.onboarded === false) {
+          if (!info.onboarded) {
             setShowOnboarding(true);
           }
           setSharedPatientInfo({ name: info.name, bio: info.bio, birthday: info.birthday, age: info.age, address: info.address, photo: info.photo, pin: info.pin, profileId: session.user.id });
@@ -1854,18 +1844,30 @@ function App() {
         let { data: remindersData } = await supabase.from('reminders').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (remindersData && remindersData.length > 0) {
           setSharedReminders(remindersData.map((r) => ({ id: r.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done })));
+        } else {
+          const defaults = initialReminders.map((r) => ({ profile_id: session.user.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done }));
+          const { data: newReminders } = await supabase.from('reminders').insert(defaults).select();
+          if (newReminders) setSharedReminders(newReminders.map((r) => ({ id: r.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done })));
         }
 
         // Medications
         let { data: medsData } = await supabase.from('medications').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (medsData && medsData.length > 0) {
           setSharedMedications(medsData.map((m) => ({ id: m.id, name: m.name, dosage: m.dosage, time: m.time })));
+        } else {
+          const defaults = [{ profile_id: session.user.id, name: 'Donepezil', dosage: '10mg', time: 'Morning' }, { profile_id: session.user.id, name: 'Memantine', dosage: '20mg', time: 'Evening' }];
+          const { data: newMeds } = await supabase.from('medications').insert(defaults).select();
+          if (newMeds) setSharedMedications(newMeds.map((m) => ({ id: m.id, name: m.name, dosage: m.dosage, time: m.time })));
         }
 
         // Contacts
         let { data: contactsData } = await supabase.from('contacts').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (contactsData && contactsData.length > 0) {
           setSharedContacts(contactsData.map((c) => ({ id: c.id, name: c.name, relationship: c.relationship, phone: c.phone })));
+        } else {
+          const defaults = [{ profile_id: session.user.id, name: 'Sarah', relationship: 'Daughter', phone: '617-555-0101' }, { profile_id: session.user.id, name: 'Michael', relationship: 'Son', phone: '617-555-0102' }, { profile_id: session.user.id, name: 'Dr. Patel', relationship: 'Doctor', phone: '978-555-0201' }];
+          const { data: newContacts } = await supabase.from('contacts').insert(defaults).select();
+          if (newContacts) setSharedContacts(newContacts.map((c) => ({ id: c.id, name: c.name, relationship: c.relationship, phone: c.phone })));
         }
 
         // Routine
@@ -1876,17 +1878,36 @@ function App() {
             section,
             items: routineData.filter((r) => r.section === section).map((r) => ({ id: r.id, label: r.label, time: r.time, done: r.done })),
           })));
+        } else {
+          const defaults = initialRoutineData.flatMap((group, gi) =>
+            group.items.map((item, ii) => ({ profile_id: session.user.id, section: group.section, label: item.label, time: item.time, done: false, sort_order: gi * 100 + ii }))
+          );
+          const { data: newRoutine } = await supabase.from('routine_items').insert(defaults).select();
+          if (newRoutine) {
+            const sections = ["Morning", "Afternoon", "Evening"];
+            setSharedRoutine(sections.map((section) => ({
+              section,
+              items: newRoutine.filter((r) => r.section === section).map((r) => ({ id: r.id, label: r.label, time: r.time, done: r.done })),
+            })));
+          }
         }
 
         // Family members
         let { data: familyData } = await supabase.from('family_members').select('*').eq('profile_id', session.user.id).order('sort_order', { ascending: true });
         if (familyData && familyData.length > 0) {
           setFamilyMembers(familyData.map((m) => ({ id: m.id, name: m.name, relationship: m.relationship, image: m.image })));
+        } else {
+          const defaults = [
+            { profile_id: session.user.id, name: 'Sarah', relationship: 'Your Daughter', image: 'https://picsum.photos/seed/sarah/400/600', sort_order: 0 },
+            { profile_id: session.user.id, name: 'Michael', relationship: 'Your Son', image: 'https://picsum.photos/seed/michael/400/600', sort_order: 1 },
+            { profile_id: session.user.id, name: 'Emma', relationship: 'Your Granddaughter', image: 'https://picsum.photos/seed/emma/400/600', sort_order: 2 },
+          ];
+          const { data: newFamily } = await supabase.from('family_members').insert(defaults).select();
+          if (newFamily) setFamilyMembers(newFamily.map((m) => ({ id: m.id, name: m.name, relationship: m.relationship, image: m.image })));
         }
       } catch (err) {
         console.error('Load error:', err);
       }
-      setDataLoaded(true);
     };
     loadData();
   }, [session]);
@@ -1929,7 +1950,7 @@ function App() {
     if (label === "Games") setShowGames(true);
   };
 
-  if (authLoading || (session && !dataLoaded)) {
+  if (authLoading) {
     return (
       <div style={{ maxWidth: "390px", margin: "0 auto", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif" }}>
         <p style={{ color: "#aaa", fontSize: "16px" }}>Loading...</p>
