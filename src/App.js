@@ -16,6 +16,7 @@ const seasonalImages = {
   Winter: ["https://picsum.photos/seed/winter1/400/200","https://picsum.photos/seed/winter2/400/200","https://picsum.photos/seed/winter3/400/200"],
 };
 
+// eslint-disable-next-line no-unused-vars
 const initialReminders = [
   { id: 1, label: "Take morning medication", time: "8:00 AM", date: "", repeat: "daily", section: "today", done: false },
   { id: 2, label: "Call Sarah", time: "10:30 AM", date: "", repeat: "none", section: "today", done: false },
