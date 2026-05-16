@@ -607,33 +607,6 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
   const [newImageFile, setNewImageFile] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [deletePassword, setDeletePassword] = useState("");
-  const [deleteError, setDeleteError] = useState("");
-  const [deleting, setDeleting] = useState(false);
-
-  const handleDeleteAccount = async () => {
-    setDeleting(true);
-    setDeleteError("");
-    try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: session.user.email,
-        password: deletePassword,
-      });
-      if (signInError) { setDeleteError("Incorrect password. Try again."); setDeleting(false); return; }
-      const uid = session.user.id;
-      await supabase.from('reminders').delete().eq('profile_id', uid);
-      await supabase.from('medications').delete().eq('profile_id', uid);
-      await supabase.from('contacts').delete().eq('profile_id', uid);
-      await supabase.from('routine_items').delete().eq('profile_id', uid);
-      await supabase.from('family_members').delete().eq('profile_id', uid);
-      await supabase.from('patient_info').delete().eq('profile_id', uid);
-      await supabase.from('profiles').delete().eq('id', uid);
-      await supabase.auth.signOut();
-    } catch (err) {
-      setDeleteError("Something went wrong. Please try again.");
-    }
-    setDeleting(false);
-  };
 
   const inputStyle = { width: "100%", padding: "12px 14px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
 
