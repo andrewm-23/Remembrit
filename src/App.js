@@ -8,7 +8,7 @@ const menuItems = [
   { label: "Games", icon: Puzzle },
   { label: "Photos", icon: Camera },
 ];
-
+// eslint-disable-next-line no-unused-vars
 const seasonalImages = {
   Spring: ["https://picsum.photos/seed/spring1/400/200","https://picsum.photos/seed/spring2/400/200","https://picsum.photos/seed/spring3/400/200"],
   Summer: ["https://picsum.photos/seed/summer1/400/200","https://picsum.photos/seed/summer2/400/200","https://picsum.photos/seed/summer3/400/200"],
@@ -60,7 +60,7 @@ function getSeason() {
   if (month >= 8 && month <= 10) return "Autumn";
   return "Winter";
 }
-
+// eslint-disable-next-line no-unused-vars
 function getSeasonalImageIndex() {
   const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
   return Math.floor(dayOfYear / 3) % 3;
