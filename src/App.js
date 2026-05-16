@@ -607,7 +607,6 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
   const [newImageFile, setNewImageFile] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -1849,7 +1848,7 @@ function App() {
           setShowOnboarding(true);
           // Still need to load defaults for other tables below, but skip patient info
         } else {
-          if (!info.onboarded) {
+          if (info.onboarded === false) {
             setShowOnboarding(true);
           }
           setSharedPatientInfo({ name: info.name, bio: info.bio, birthday: info.birthday, age: info.age, address: info.address, photo: info.photo, pin: info.pin, profileId: session.user.id });
