@@ -459,7 +459,12 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
         </div>
         {todayItems.length > 0 && <><SectionLabel label="Today" />{todayItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {upcomingItems.length > 0 && <><SectionLabel label="Upcoming" />{upcomingItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
-        {reminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
+        {reminders.length === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 24px" }}>
+            <p style={{ margin: "0 0 8px 0", fontSize: "17px", color: "#333" }}>No reminders yet</p>
+            <p style={{ margin: 0, fontSize: "14px", color: "#aaa" }}>Tap the button below to add the first reminder.</p>
+          </div>
+        )}
         <div style={{ padding: "20px" }}>
           <button onClick={() => setShowAddSheet(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: "14px", borderRadius: "12px", backgroundColor: "#f5f5f5", border: "none", fontSize: "16px", color: "#555", cursor: "pointer", fontFamily: "inherit" }}>
             <Plus size={18} color="#555" /> Add Reminder
@@ -515,6 +520,12 @@ function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedRem
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Medications</h2>
       </div>
       <div style={{ padding: "24px 20px" }}>
+        {medicationList.length === 0 && (
+          <div style={{ textAlign: "center", padding: "40px 0 20px 0" }}>
+            <p style={{ margin: "0 0 8px 0", fontSize: "17px", color: "#333" }}>No medications yet</p>
+            <p style={{ margin: 0, fontSize: "14px", color: "#aaa" }}>Add medications using the form below.</p>
+          </div>
+        )}
         {medicationList.map((m) => (
           <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div>
@@ -579,6 +590,12 @@ function CaregiverContactsPage({ contactList, setContactList, session, onBack })
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Contacts</h2>
       </div>
       <div style={{ padding: "24px 20px" }}>
+        {contactList.length === 0 && (
+          <div style={{ textAlign: "center", padding: "40px 0 20px 0" }}>
+            <p style={{ margin: "0 0 8px 0", fontSize: "17px", color: "#333" }}>No contacts yet</p>
+            <p style={{ margin: 0, fontSize: "14px", color: "#aaa" }}>Add contacts using the form below.</p>
+          </div>
+        )}
         {contactList.map((c) => (
           <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div>
@@ -607,7 +624,6 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
   const [newImageFile, setNewImageFile] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState("");
   const [uploading, setUploading] = useState(false);
-
   const inputStyle = { width: "100%", padding: "12px 14px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
 
   const handleImageChange = async (e, id) => {
@@ -929,7 +945,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
           return (
             <div key={group.section} style={{ marginBottom: "24px" }}>
               <p style={{ margin: "0 0 10px 0", fontSize: "13px", fontWeight: "600", color: colors.label, textTransform: "uppercase", letterSpacing: "0.06em" }}>{group.section}</p>
-              <div style={{ backgroundColor: colors.bg, borderRadius: "16px", border: `1px solid ${colors.border}`, overflow: "hidden", marginBottom: "10px" }}>
+              {group.items.length > 0 && <div style={{ backgroundColor: colors.bg, borderRadius: "16px", border: `1px solid ${colors.border}`, overflow: "hidden", marginBottom: "10px" }}>
                 {group.items.map((item, index) => (
                   <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: index < group.items.length - 1 ? `1px solid ${colors.border}` : "none", opacity: item.done ? 0.45 : 1 }}>
                     <div style={{ flex: 1 }}>
@@ -939,7 +955,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
                     <button onClick={() => deleteItem(group.section, item.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "18px", flexShrink: 0 }}>✕</button>
                   </div>
                 ))}
-              </div>
+              </div>}
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <input style={inputStyle} placeholder="New activity" value={newLabels[group.section]} onChange={(e) => setNewLabels((prev) => ({ ...prev, [group.section]: e.target.value }))} />
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -1378,7 +1394,12 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
         </div>
         {todayItems.length > 0 && <><SectionLabel label="Today" />{todayItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {upcomingItems.length > 0 && <><SectionLabel label="Upcoming" />{upcomingItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
-        {reminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
+        {reminders.length === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 24px" }}>
+            <p style={{ margin: "0 0 8px 0", fontSize: "17px", color: "#333" }}>No reminders yet</p>
+            <p style={{ margin: 0, fontSize: "14px", color: "#aaa" }}>Tap the button below to add your first reminder.</p>
+          </div>
+        )}
         <div style={{ padding: "20px" }}>
           <button onClick={() => setShowAddSheet(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: "14px", borderRadius: "12px", backgroundColor: "#f5f5f5", border: "none", fontSize: "16px", color: "#555", cursor: "pointer", fontFamily: "inherit" }}>
             <Plus size={18} color="#555" /> Add Reminder
@@ -1831,30 +1852,18 @@ function App() {
         let { data: remindersData } = await supabase.from('reminders').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (remindersData && remindersData.length > 0) {
           setSharedReminders(remindersData.map((r) => ({ id: r.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done })));
-        } else {
-          const defaults = initialReminders.map((r) => ({ profile_id: session.user.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done }));
-          const { data: newReminders } = await supabase.from('reminders').insert(defaults).select();
-          if (newReminders) setSharedReminders(newReminders.map((r) => ({ id: r.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done })));
         }
 
         // Medications
         let { data: medsData } = await supabase.from('medications').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (medsData && medsData.length > 0) {
           setSharedMedications(medsData.map((m) => ({ id: m.id, name: m.name, dosage: m.dosage, time: m.time })));
-        } else {
-          const defaults = [{ profile_id: session.user.id, name: 'Donepezil', dosage: '10mg', time: 'Morning' }, { profile_id: session.user.id, name: 'Memantine', dosage: '20mg', time: 'Evening' }];
-          const { data: newMeds } = await supabase.from('medications').insert(defaults).select();
-          if (newMeds) setSharedMedications(newMeds.map((m) => ({ id: m.id, name: m.name, dosage: m.dosage, time: m.time })));
         }
 
         // Contacts
         let { data: contactsData } = await supabase.from('contacts').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (contactsData && contactsData.length > 0) {
           setSharedContacts(contactsData.map((c) => ({ id: c.id, name: c.name, relationship: c.relationship, phone: c.phone })));
-        } else {
-          const defaults = [{ profile_id: session.user.id, name: 'Sarah', relationship: 'Daughter', phone: '617-555-0101' }, { profile_id: session.user.id, name: 'Michael', relationship: 'Son', phone: '617-555-0102' }, { profile_id: session.user.id, name: 'Dr. Patel', relationship: 'Doctor', phone: '978-555-0201' }];
-          const { data: newContacts } = await supabase.from('contacts').insert(defaults).select();
-          if (newContacts) setSharedContacts(newContacts.map((c) => ({ id: c.id, name: c.name, relationship: c.relationship, phone: c.phone })));
         }
 
         // Routine
@@ -1865,32 +1874,12 @@ function App() {
             section,
             items: routineData.filter((r) => r.section === section).map((r) => ({ id: r.id, label: r.label, time: r.time, done: r.done })),
           })));
-        } else {
-          const defaults = initialRoutineData.flatMap((group, gi) =>
-            group.items.map((item, ii) => ({ profile_id: session.user.id, section: group.section, label: item.label, time: item.time, done: false, sort_order: gi * 100 + ii }))
-          );
-          const { data: newRoutine } = await supabase.from('routine_items').insert(defaults).select();
-          if (newRoutine) {
-            const sections = ["Morning", "Afternoon", "Evening"];
-            setSharedRoutine(sections.map((section) => ({
-              section,
-              items: newRoutine.filter((r) => r.section === section).map((r) => ({ id: r.id, label: r.label, time: r.time, done: r.done })),
-            })));
-          }
         }
 
         // Family members
         let { data: familyData } = await supabase.from('family_members').select('*').eq('profile_id', session.user.id).order('sort_order', { ascending: true });
         if (familyData && familyData.length > 0) {
           setFamilyMembers(familyData.map((m) => ({ id: m.id, name: m.name, relationship: m.relationship, image: m.image })));
-        } else {
-          const defaults = [
-            { profile_id: session.user.id, name: 'Sarah', relationship: 'Your Daughter', image: 'https://picsum.photos/seed/sarah/400/600', sort_order: 0 },
-            { profile_id: session.user.id, name: 'Michael', relationship: 'Your Son', image: 'https://picsum.photos/seed/michael/400/600', sort_order: 1 },
-            { profile_id: session.user.id, name: 'Emma', relationship: 'Your Granddaughter', image: 'https://picsum.photos/seed/emma/400/600', sort_order: 2 },
-          ];
-          const { data: newFamily } = await supabase.from('family_members').insert(defaults).select();
-          if (newFamily) setFamilyMembers(newFamily.map((m) => ({ id: m.id, name: m.name, relationship: m.relationship, image: m.image })));
         }
       } catch (err) {
         console.error('Load error:', err);
