@@ -607,6 +607,34 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
   const [newImageFile, setNewImageFile] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: session.user.email,
+        password: deletePassword,
+      });
+      if (signInError) { setDeleteError("Incorrect password. Try again."); setDeleting(false); return; }
+      const uid = session.user.id;
+      await supabase.from('reminders').delete().eq('profile_id', uid);
+      await supabase.from('medications').delete().eq('profile_id', uid);
+      await supabase.from('contacts').delete().eq('profile_id', uid);
+      await supabase.from('routine_items').delete().eq('profile_id', uid);
+      await supabase.from('family_members').delete().eq('profile_id', uid);
+      await supabase.from('patient_info').delete().eq('profile_id', uid);
+      await supabase.from('profiles').delete().eq('id', uid);
+      await supabase.auth.signOut();
+    } catch (err) {
+      setDeleteError("Something went wrong. Please try again.");
+    }
+    setDeleting(false);
+  };
 
   const inputStyle = { width: "100%", padding: "12px 14px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
 
@@ -703,6 +731,34 @@ function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack })
   const [pin, setPin] = useState(patientInfo.pin || "1234");
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: session.user.email,
+        password: deletePassword,
+      });
+      if (signInError) { setDeleteError("Incorrect password. Try again."); setDeleting(false); return; }
+      const uid = session.user.id;
+      await supabase.from('reminders').delete().eq('profile_id', uid);
+      await supabase.from('medications').delete().eq('profile_id', uid);
+      await supabase.from('contacts').delete().eq('profile_id', uid);
+      await supabase.from('routine_items').delete().eq('profile_id', uid);
+      await supabase.from('family_members').delete().eq('profile_id', uid);
+      await supabase.from('patient_info').delete().eq('profile_id', uid);
+      await supabase.from('profiles').delete().eq('id', uid);
+      await supabase.auth.signOut();
+    } catch (err) {
+      setDeleteError("Something went wrong. Please try again.");
+    }
+    setDeleting(false);
+  };
 
   useEffect(() => {
     setName(patientInfo.name);
@@ -796,6 +852,32 @@ function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack })
         <button onClick={handleSave} disabled={uploading} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "none", backgroundColor: saved ? "#5cb85c" : "#4a90e2", color: "white", fontSize: "16px", fontWeight: "600", cursor: "pointer", fontFamily: "inherit", transition: "background-color 0.3s" }}>
           {uploading ? "Saving..." : saved ? "Saved" : "Save Changes"}
         </button>
+
+        {!showDeleteConfirm ? (
+          <button onClick={() => setShowDeleteConfirm(true)} style={{ background: "none", border: "none", width: "100%", marginTop: "8px", padding: "12px", fontSize: "13px", color: "#ccc", cursor: "pointer", fontFamily: "inherit" }}>
+            Delete Account
+          </button>
+        ) : (
+          <div style={{ marginTop: "16px", padding: "20px", backgroundColor: "#fff5f5", borderRadius: "12px", border: "1px solid #fdd" }}>
+            <p style={{ margin: "0 0 6px 0", fontSize: "15px", color: "#c0392b", fontWeight: "600" }}>Delete account?</p>
+            <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#888", lineHeight: "1.5" }}>This will permanently delete all data including reminders, medications, contacts, routine, and photos. This cannot be undone.</p>
+            <p style={{ margin: "0 0 6px 0", fontSize: "13px", color: "#aaa", fontWeight: "500" }}>Enter your Remembrit password to confirm</p>
+            <input
+              type="password"
+              placeholder="Password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              style={{ width: "100%", padding: "12px 14px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fff", boxSizing: "border-box", outline: "none", marginBottom: "12px" }}
+            />
+            {deleteError && <p style={{ margin: "0 0 12px 0", fontSize: "13px", color: "#e25555" }}>{deleteError}</p>}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteError(""); }} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", backgroundColor: "#f0f0f0", color: "#888", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+              <button onClick={handleDeleteAccount} disabled={!deletePassword || deleting} style={{ flex: 1, padding: "11px", borderRadius: "10px", border: "none", backgroundColor: deletePassword && !deleting ? "#e25555" : "#ddd", color: deletePassword && !deleting ? "white" : "#aaa", fontSize: "14px", fontWeight: "600", cursor: deletePassword && !deleting ? "pointer" : "default", fontFamily: "inherit" }}>
+                {deleting ? "Deleting..." : "Delete Everything"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1725,6 +1807,7 @@ function App() {
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showReminders, setShowReminders] = useState(false);
   const [showRoutine, setShowRoutine] = useState(false);
@@ -1840,6 +1923,7 @@ function App() {
       } catch (err) {
         console.error('Load error:', err);
       }
+      setDataLoaded(true);
     };
     loadData();
   }, [session]);
@@ -1882,7 +1966,7 @@ function App() {
     if (label === "Games") setShowGames(true);
   };
 
-  if (authLoading) {
+  if (authLoading || (session && !dataLoaded)) {
     return (
       <div style={{ maxWidth: "390px", margin: "0 auto", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter', sans-serif" }}>
         <p style={{ color: "#aaa", fontSize: "16px" }}>Loading...</p>
