@@ -1867,30 +1867,18 @@ function App() {
         let { data: remindersData } = await supabase.from('reminders').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (remindersData && remindersData.length > 0) {
           setSharedReminders(remindersData.map((r) => ({ id: r.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done })));
-        } else {
-          const defaults = initialReminders.map((r) => ({ profile_id: session.user.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done }));
-          const { data: newReminders } = await supabase.from('reminders').insert(defaults).select();
-          if (newReminders) setSharedReminders(newReminders.map((r) => ({ id: r.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done })));
         }
 
         // Medications
         let { data: medsData } = await supabase.from('medications').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (medsData && medsData.length > 0) {
           setSharedMedications(medsData.map((m) => ({ id: m.id, name: m.name, dosage: m.dosage, time: m.time })));
-        } else {
-          const defaults = [{ profile_id: session.user.id, name: 'Donepezil', dosage: '10mg', time: 'Morning' }, { profile_id: session.user.id, name: 'Memantine', dosage: '20mg', time: 'Evening' }];
-          const { data: newMeds } = await supabase.from('medications').insert(defaults).select();
-          if (newMeds) setSharedMedications(newMeds.map((m) => ({ id: m.id, name: m.name, dosage: m.dosage, time: m.time })));
         }
 
         // Contacts
         let { data: contactsData } = await supabase.from('contacts').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (contactsData && contactsData.length > 0) {
           setSharedContacts(contactsData.map((c) => ({ id: c.id, name: c.name, relationship: c.relationship, phone: c.phone })));
-        } else {
-          const defaults = [{ profile_id: session.user.id, name: 'Sarah', relationship: 'Daughter', phone: '617-555-0101' }, { profile_id: session.user.id, name: 'Michael', relationship: 'Son', phone: '617-555-0102' }, { profile_id: session.user.id, name: 'Dr. Patel', relationship: 'Doctor', phone: '978-555-0201' }];
-          const { data: newContacts } = await supabase.from('contacts').insert(defaults).select();
-          if (newContacts) setSharedContacts(newContacts.map((c) => ({ id: c.id, name: c.name, relationship: c.relationship, phone: c.phone })));
         }
 
         // Routine
@@ -1901,32 +1889,13 @@ function App() {
             section,
             items: routineData.filter((r) => r.section === section).map((r) => ({ id: r.id, label: r.label, time: r.time, done: r.done })),
           })));
-        } else {
-          const defaults = initialRoutineData.flatMap((group, gi) =>
-            group.items.map((item, ii) => ({ profile_id: session.user.id, section: group.section, label: item.label, time: item.time, done: false, sort_order: gi * 100 + ii }))
-          );
-          const { data: newRoutine } = await supabase.from('routine_items').insert(defaults).select();
-          if (newRoutine) {
-            const sections = ["Morning", "Afternoon", "Evening"];
-            setSharedRoutine(sections.map((section) => ({
-              section,
-              items: newRoutine.filter((r) => r.section === section).map((r) => ({ id: r.id, label: r.label, time: r.time, done: r.done })),
-            })));
-          }
         }
+        
 
         // Family members
         let { data: familyData } = await supabase.from('family_members').select('*').eq('profile_id', session.user.id).order('sort_order', { ascending: true });
         if (familyData && familyData.length > 0) {
           setFamilyMembers(familyData.map((m) => ({ id: m.id, name: m.name, relationship: m.relationship, image: m.image })));
-        } else {
-          const defaults = [
-            { profile_id: session.user.id, name: 'Sarah', relationship: 'Your Daughter', image: 'https://picsum.photos/seed/sarah/400/600', sort_order: 0 },
-            { profile_id: session.user.id, name: 'Michael', relationship: 'Your Son', image: 'https://picsum.photos/seed/michael/400/600', sort_order: 1 },
-            { profile_id: session.user.id, name: 'Emma', relationship: 'Your Granddaughter', image: 'https://picsum.photos/seed/emma/400/600', sort_order: 2 },
-          ];
-          const { data: newFamily } = await supabase.from('family_members').insert(defaults).select();
-          if (newFamily) setFamilyMembers(newFamily.map((m) => ({ id: m.id, name: m.name, relationship: m.relationship, image: m.image })));
         }
       } catch (err) {
         console.error('Load error:', err);
