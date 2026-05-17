@@ -9,16 +9,6 @@ const menuItems = [
   { label: "Photos", icon: Camera },
 ];
 
-
-
-const initialReminders = [
-  { id: 1, label: "Take morning medication", time: "8:00 AM", date: "", repeat: "daily", section: "today", done: false },
-  { id: 2, label: "Call Sarah", time: "10:30 AM", date: "", repeat: "none", section: "today", done: false },
-  { id: 3, label: "Doctor's appointment — Dr. Patel", time: "2:00 PM", date: "", repeat: "none", section: "today", done: false },
-  { id: 4, label: "Take evening medication", time: "7:00 PM", date: "", repeat: "daily", section: "today", done: false },
-  { id: 5, label: "Emma's birthday", time: "", date: "Saturday, May 17", repeat: "yearly", section: "upcoming", done: false },
-];
-
 const repeatOptions = [
   { value: "none", label: "No repeat" },
   { value: "daily", label: "Every day" },
