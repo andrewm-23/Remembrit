@@ -9,12 +9,7 @@ const menuItems = [
   { label: "Photos", icon: Camera },
 ];
 
-const seasonalImages = {
-  Spring: ["https://picsum.photos/seed/spring1/400/200","https://picsum.photos/seed/spring2/400/200","https://picsum.photos/seed/spring3/400/200"],
-  Summer: ["https://picsum.photos/seed/summer1/400/200","https://picsum.photos/seed/summer2/400/200","https://picsum.photos/seed/summer3/400/200"],
-  Autumn: ["https://picsum.photos/seed/autumn1/400/200","https://picsum.photos/seed/autumn2/400/200","https://picsum.photos/seed/autumn3/400/200"],
-  Winter: ["https://picsum.photos/seed/winter1/400/200","https://picsum.photos/seed/winter2/400/200","https://picsum.photos/seed/winter3/400/200"],
-};
+
 
 const initialReminders = [
   { id: 1, label: "Take morning medication", time: "8:00 AM", date: "", repeat: "daily", section: "today", done: false },
@@ -61,10 +56,7 @@ function getSeason() {
   return "Winter";
 }
 
-function getSeasonalImageIndex() {
-  const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  return Math.floor(dayOfYear / 3) % 3;
-}
+
 
 function useBodyScrollLock(active) {
   useEffect(() => {
