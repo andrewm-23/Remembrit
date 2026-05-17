@@ -1108,23 +1108,7 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
   }
 
   if (page === "photosView") {
-    return (
-      <SettingsPage title="Family Photos" onClose={() => setPage(null)}>
-        {familyMembers.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginTop: "20px" }}>No photos added yet.</p>
-        ) : familyMembers.map((member) => (
-          <div key={member.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
-            <div style={{ width: "52px", height: "52px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: "#ddd" }}>
-              <img src={member.image} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            </div>
-            <div>
-              <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#333" }}>{member.name}</p>
-              <p style={{ margin: 0, fontSize: "13px", color: "#aaa" }}>{member.relationship}</p>
-            </div>
-          </div>
-        ))}
-      </SettingsPage>
-    );
+    return <FamilyMembersPage familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} session={session} onBack={() => setPage(null)} />;
   }
 
   if (page === "caregiver") return <CaregiverPINScreen onClose={() => setPage(null)} onUnlock={() => setPage("unlocking")} correctPin={sharedPatientInfo.pin} />;
