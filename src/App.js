@@ -414,10 +414,10 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
     await supabase.from('reminders').update({ done: nowDone }).eq('id', id);
     setReminders((prev) => prev.map((r) => {
       if (r.id !== id) return r;
-      if (nowDone) setTimeout(async () => {
+      if (nowDone) {
         await supabase.from('reminders').update({ archived: true }).eq('id', id);
         setReminders((curr) => curr.map((x) => x.id === id ? { ...x, archived: true } : x));
-      }, 2 * 60 * 1000);
+      }
       return { ...r, done: nowDone };
     }));
   };
@@ -565,6 +565,7 @@ function MedArchiveSection({ medications, setMedicationList }) {
                 <p style={{ margin: 0, fontSize: "12px", color: "#ccc" }}>{m.dosage} — {m.time}</p>
               </div>
               <button onClick={() => restore(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#4a90e2", fontSize: "13px", fontFamily: "inherit", fontWeight: "500" }}>Restore</button>
+              <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px" }}>✕</button>
               <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px" }}>✕</button>
             </div>
           ))}
@@ -1020,7 +1021,6 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
 function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminders, sharedRoutine, setSharedRoutine, sharedMedications, setSharedMedications, sharedContacts, setSharedContacts, sharedPatientInfo, setSharedPatientInfo, familyMembers, setFamilyMembers }) {
   useBodyScrollLock(true);
   const [activePage, setActivePage] = useState(null);
-  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const reminders = sharedReminders;
   const setReminders = setSharedReminders;
@@ -1044,7 +1044,7 @@ function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminde
 
   const caregiverMenuItems = [
     { label: "Reminders", icon: Bell, key: "reminders", count: `${completedToday}/${totalToday} done` },
-    { label: "Medications", icon: Pill, key: "medications", count: `${medicationList.length} medications` },
+    { label: "Medications", icon: Pill, key: "medications", count: `${medicationList.filter((m) => !m.archived).length} medications` },
     { label: "Contacts", icon: Phone, key: "contacts", count: `${contactList.length} contacts` },
     { label: "Routine", icon: ClipboardList, key: "routine", count: `${routineData.reduce((acc, g) => acc + g.items.length, 0)} activities` },
     { label: "Photos", icon: Camera, key: "photos", count: `${familyMembers.length} people` },
@@ -1081,7 +1081,7 @@ function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminde
             )}
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <p style={{ margin: 0, fontSize: "14px", color: "#888" }}>Medications</p>
-              <p style={{ margin: 0, fontSize: "14px", color: "#333", fontWeight: "500" }}>{medicationList.length} active</p>
+              <p style={{ margin: 0, fontSize: "14px", color: "#333", fontWeight: "500" }}>{medicationList.filter((m) => !m.archived).length} active</p>
             </div>
           </div>
         </div>
@@ -1168,14 +1168,54 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
   }
 
   if (page === "medications") {
+    const activeMeds = sharedMedications.filter((m) => !m.archived);
+    const archivedMeds = sharedMedications.filter((m) => m.archived);
     return (
       <SettingsPage title="My Medications" onClose={() => setPage(null)}>
-        {sharedMedications.length === 0 ? (
+        {activeMeds.length === 0 ? (
           <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginTop: "20px" }}>No medications yet.</p>
-        ) : sharedMedications.map((med) => (
+        ) : activeMeds.map((med) => (
           <div key={med.id} style={{ backgroundColor: "#f9f9f9", borderRadius: "12px", padding: "16px", marginBottom: "12px" }}>
             <p style={{ margin: "0 0 4px 0", fontSize: "20px", color: "#333", fontWeight: "bold" }}>{med.name}</p>
             <p style={{ margin: 0, fontSize: "16px", color: "#888" }}>{med.dosage} — {med.time}</p>
+          </div>
+        ))}
+        {archivedMeds.length > 0 && (
+          <div style={{ marginTop: "24px" }}>
+            <button onClick={() => setPage("medicationsArchive")} style={{ background: "none", border: "none", fontSize: "13px", color: "#aaa", cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
+              View past medications ({archivedMeds.length})
+            </button>
+          </div>
+        )}
+      </SettingsPage>
+    );
+  }
+
+  if (page === "medicationsArchive") {
+    return (
+      <SettingsPage title="Past Medications" onClose={() => setPage("medications")}>
+        <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#bbb" }}>These medications are no longer active but are kept for reference.</p>
+        {sharedMedications.filter((m) => m.archived).map((med) => (
+          <div key={med.id} style={{ backgroundColor: "#f9f9f9", borderRadius: "12px", padding: "16px", marginBottom: "12px" }}>
+            <p style={{ margin: "0 0 4px 0", fontSize: "18px", color: "#aaa", fontWeight: "bold", textDecoration: "line-through" }}>{med.name}</p>
+            <p style={{ margin: 0, fontSize: "15px", color: "#ccc" }}>{med.dosage} — {med.time}</p>
+          </div>
+        ))}
+      </SettingsPage>
+    );
+  }
+
+  if (page === "remindersArchive") {
+    const archived = sharedReminders.filter((r) => r.archived);
+    return (
+      <SettingsPage title="Past Reminders" onClose={() => setPage(null)}>
+        <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#bbb" }}>Completed reminders are kept here for 30 days.</p>
+        {archived.length === 0 ? (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginTop: "20px" }}>No archived reminders.</p>
+        ) : archived.map((r) => (
+          <div key={r.id} style={{ padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
+            <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#aaa", textDecoration: "line-through" }}>{r.label}</p>
+            {r.time && <p style={{ margin: 0, fontSize: "13px", color: "#ccc" }}>{r.time}</p>}
           </div>
         ))}
       </SettingsPage>
@@ -1248,6 +1288,7 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
           { key: "medications", label: "My Medications", icon: Pill },
           { key: "contacts", label: "My Contacts", icon: Phone },
           { key: "photosView", label: "Family Photos", icon: Camera },
+          { key: "remindersArchive", label: "Past Reminders", icon: Bell },
           { key: "caregiver", label: "Caregiver Access", icon: ChevronRight },
         ].map((item) => {
           const Icon = item.icon;
@@ -1264,22 +1305,9 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
       </div>
 
       {/* Sign out — buried at bottom, requires confirmation */}
-      <div style={{ textAlign: "center", padding: "30px 20px 20px 20px" }}>
-        <p style={{ margin: "0 0 2px 0", fontSize: "12px", color: "#bbb" }}>Remembrit</p>
-        <p style={{ margin: "0 0 24px 0", fontSize: "11px", color: "#ccc" }}>Version 0.1.0</p>
-        {!showSignOutConfirm ? (
-          <button onClick={() => setShowSignOutConfirm(true)} style={{ background: "none", border: "none", fontSize: "13px", color: "#ccc", cursor: "pointer", fontFamily: "inherit" }}>
-            Sign Out
-          </button>
-        ) : (
-          <div>
-            <p style={{ margin: "0 0 12px 0", fontSize: "14px", color: "#888" }}>Are you sure you want to sign out?</p>
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              <button onClick={() => supabase.auth.signOut()} style={{ padding: "10px 20px", borderRadius: "10px", border: "none", backgroundColor: "#e25555", color: "white", fontSize: "14px", cursor: "pointer", fontFamily: "inherit", fontWeight: "500" }}>Sign Out</button>
-              <button onClick={() => setShowSignOutConfirm(false)} style={{ padding: "10px 20px", borderRadius: "10px", border: "none", backgroundColor: "#f0f0f0", color: "#888", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
-            </div>
-          </div>
-        )}
+      <div style={{ textAlign: "center", padding: "30px 20px" }}>
+        <p style={{ margin: 0, fontSize: "12px", color: "#bbb" }}>Remembrit</p>
+        <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: "#ccc" }}>Version 0.1.0</p>
       </div>
     </div>
   );
@@ -1438,10 +1466,10 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
     await supabase.from('reminders').update({ done: nowDone }).eq('id', id);
     setReminders((prev) => prev.map((r) => {
       if (r.id !== id) return r;
-      if (nowDone) setTimeout(async () => {
-        await supabase.from('reminders').delete().eq('id', id);
-        setReminders((curr) => curr.filter((x) => x.id !== id));
-      }, 2 * 60 * 1000);
+      if (nowDone) {
+        await supabase.from('reminders').update({ archived: true }).eq('id', id);
+        setReminders((curr) => curr.map((x) => x.id === id ? { ...x, archived: true } : x));
+      }
       return { ...r, done: nowDone };
     }));
   };
@@ -1975,7 +2003,16 @@ function App() {
         // Reminders
         let { data: remindersData } = await supabase.from('reminders').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (remindersData && remindersData.length > 0) {
-          setSharedReminders(remindersData.map((r) => ({ id: r.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done, archived: r.archived || false })));
+          const today = new Date().toDateString();
+          const toArchive = remindersData.filter((r) => r.done && !r.archived);
+          if (toArchive.length > 0) {
+            await Promise.all(toArchive.map((r) => supabase.from('reminders').update({ archived: true }).eq('id', r.id)));
+          }
+          setSharedReminders(remindersData.map((r) => ({
+            id: r.id, label: r.label, time: r.time, date: r.date,
+            repeat: r.repeat, section: r.section, done: r.done,
+            archived: r.archived || toArchive.some((x) => x.id === r.id),
+          })));
         }
 
         // Medications
