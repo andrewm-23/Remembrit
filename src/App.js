@@ -535,6 +535,45 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
   );
 }
 
+function MedArchiveSection({ medications, setMedicationList }) {
+  const [expanded, setExpanded] = useState(false);
+  const archived = medications.filter((m) => m.archived);
+
+  const restore = async (id) => {
+    await supabase.from('medications').update({ archived: false }).eq('id', id);
+    setMedicationList((prev) => prev.map((m) => m.id === id ? { ...m, archived: false } : m));
+  };
+
+  const deleteMed = async (id) => {
+    await supabase.from('medications').delete().eq('id', id);
+    setMedicationList((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  return (
+    <div style={{ marginBottom: "24px" }}>
+      <div onClick={() => setExpanded((p) => !p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", paddingBottom: "10px", borderBottom: "1px solid #f0f0f0" }}>
+        <p style={{ margin: 0, fontSize: "12px", fontWeight: "600", color: "#aaa", letterSpacing: "0.06em", textTransform: "uppercase" }}>Archive ({archived.length})</p>
+        <ChevronRight size={16} color="#ccc" style={{ transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
+      </div>
+      {expanded && (
+        <div>
+          <p style={{ margin: "10px 0 12px 0", fontSize: "12px", color: "#bbb" }}>Archived medications are kept for reference and can be restored at any time.</p>
+          {archived.map((m) => (
+            <div key={m.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #f5f5f5" }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#aaa", textDecoration: "line-through" }}>{m.name}</p>
+                <p style={{ margin: 0, fontSize: "12px", color: "#ccc" }}>{m.dosage} — {m.time}</p>
+              </div>
+              <button onClick={() => restore(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#4a90e2", fontSize: "13px", fontFamily: "inherit", fontWeight: "500" }}>Restore</button>
+              <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px" }}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedReminders, setSharedReminders, session, onBack }) {
   const [newName, setNewName] = useState("");
   const [newDosage, setNewDosage] = useState("");
@@ -565,8 +604,8 @@ function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedRem
   };
 
   const deleteMed = async (id) => {
-    await supabase.from('medications').delete().eq('id', id);
-    setMedicationList((prev) => prev.filter((x) => x.id !== id));
+    await supabase.from('medications').update({ archived: true }).eq('id', id);
+    setMedicationList((prev) => prev.map((m) => m.id === id ? { ...m, archived: true } : m));
   };
 
   return (
@@ -576,19 +615,22 @@ function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedRem
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Medications</h2>
       </div>
       <div style={{ padding: "24px 20px" }}>
-        {medicationList.length === 0 && (
+        {medicationList.filter((m) => !m.archived).length === 0 && (
           <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No medications yet.</p>
         )}
-        {medicationList.map((m) => (
+        {medicationList.filter((m) => !m.archived).map((m) => (
           <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div>
               <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#333" }}>{m.name}</p>
               <p style={{ margin: 0, fontSize: "13px", color: "#aaa" }}>{m.dosage} — {m.time}</p>
             </div>
-            <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px", paddingLeft: "12px" }}>✕</button>
+            <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "13px", fontFamily: "inherit", paddingLeft: "12px" }}>Archive</button>
           </div>
         ))}
         <div style={{ marginTop: "24px", display: "flex", flexDirection: "column", gap: "10px" }}>
+          {medicationList.filter((m) => m.archived).length > 0 && (
+            <MedArchiveSection medications={medicationList} setMedicationList={setMedicationList} />
+          )}
           <p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#aaa", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Add New</p>
           <input style={inputStyle} placeholder="Medication name" value={newName} onChange={(e) => setNewName(e.target.value)} />
           <div style={{ display: "flex", gap: "8px" }}>
@@ -1939,7 +1981,7 @@ function App() {
         // Medications
         let { data: medsData } = await supabase.from('medications').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (medsData && medsData.length > 0) {
-          setSharedMedications(medsData.map((m) => ({ id: m.id, name: m.name, dosage: m.dosage, time: m.time })));
+          setSharedMedications(medsData.map((m) => ({ id: m.id, name: m.name, dosage: m.dosage, time: m.time, archived: m.archived || false })));
         }
 
         // Contacts
