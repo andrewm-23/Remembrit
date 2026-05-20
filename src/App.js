@@ -417,8 +417,8 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
 
   const inputStyle = { width: "100%", padding: "10px 12px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
 
-  const SectionLabel = ({ label }) => (
-    <p style={{ margin: "20px 20px 4px 20px", fontSize: "12px", fontWeight: "600", color: "#aaa", letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</p>
+  const SectionLabel = ({ label, color }) => (
+    <p style={{ margin: "20px 20px 4px 20px", fontSize: "12px", fontWeight: "600", color: color || "#aaa", letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</p>
   );
 
   const ReminderItem = ({ reminder }) => {
@@ -1355,7 +1355,18 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
     }));
   };
 
-  const todayItems = reminders.filter((r) => r.section === "today");
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    const [time, ampm] = timeStr.split(" ");
+    let [h, m] = time.split(":").map(Number);
+    if (ampm === "PM" && h !== 12) h += 12;
+    if (ampm === "AM" && h === 12) h = 0;
+    return h * 60 + m;
+  };
+  const overdueItems = reminders.filter((r) => r.section === "today" && !r.done && parseTimeToMinutes(r.time) !== null && parseTimeToMinutes(r.time) < currentMinutes);
+  const todayItems = reminders.filter((r) => r.section === "today" && !overdueItems.includes(r));
   const upcomingItems = reminders.filter((r) => r.section === "upcoming");
   const repeatLabel = (val) => { const f = repeatOptions.find((o) => o.value === val); return f && val !== "none" ? f.label : null; };
 
@@ -1385,6 +1396,7 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
           <X size={24} color="#555" style={{ cursor: "pointer", marginRight: "16px" }} onClick={onClose} />
           <h2 style={{ margin: 0, fontSize: "22px", color: "#333" }}>Reminders</h2>
         </div>
+        {overdueItems.length > 0 && <><SectionLabel label="Overdue" color="#e25555" />{overdueItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {todayItems.length > 0 && <><SectionLabel label="Today" />{todayItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {upcomingItems.length > 0 && <><SectionLabel label="Upcoming" />{upcomingItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {reminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
