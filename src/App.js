@@ -360,6 +360,44 @@ function CaregiverPINScreen({ onClose, onUnlock, correctPin }) {
   );
 }
 
+function ArchiveSection({ reminders, setReminders }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const deleteArchived = async (id) => {
+    await supabase.from('reminders').delete().eq('id', id);
+    setReminders((prev) => prev.filter((x) => x.id !== id));
+  };
+
+  const restore = async (id) => {
+    await supabase.from('reminders').update({ archived: false, done: false }).eq('id', id);
+    setReminders((prev) => prev.map((r) => r.id === id ? { ...r, archived: false, done: false } : r));
+  };
+
+  return (
+    <div style={{ margin: "20px 20px 0 20px" }}>
+      <div onClick={() => setExpanded((p) => !p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", paddingBottom: "10px", borderBottom: "1px solid #f0f0f0" }}>
+        <p style={{ margin: 0, fontSize: "12px", fontWeight: "600", color: "#aaa", letterSpacing: "0.06em", textTransform: "uppercase" }}>Archive ({reminders.length})</p>
+        <ChevronRight size={16} color="#ccc" style={{ transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
+      </div>
+      {expanded && (
+        <div>
+          <p style={{ margin: "10px 0 12px 0", fontSize: "12px", color: "#bbb" }}>Completed reminders are archived for 30 days, then automatically deleted.</p>
+          {reminders.map((r) => (
+            <div key={r.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #f5f5f5" }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#aaa", textDecoration: "line-through" }}>{r.label}</p>
+                {r.time && <p style={{ margin: 0, fontSize: "12px", color: "#ccc" }}>{r.time}</p>}
+              </div>
+              <button onClick={() => restore(r.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#4a90e2", fontSize: "13px", fontFamily: "inherit", fontWeight: "500" }}>Restore</button>
+              <button onClick={() => deleteArchived(r.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px" }}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Caregiver Sub-Pages ────────────────────────────────────────────────────
 function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -377,9 +415,9 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
     setReminders((prev) => prev.map((r) => {
       if (r.id !== id) return r;
       if (nowDone) setTimeout(async () => {
-        await supabase.from('reminders').delete().eq('id', id);
-        setReminders((curr) => curr.filter((x) => x.id !== id));
-      }, 60 * 60 * 1000);
+        await supabase.from('reminders').update({ archived: true }).eq('id', id);
+        setReminders((curr) => curr.map((x) => x.id === id ? { ...x, archived: true } : x));
+      }, 2 * 60 * 1000);
       return { ...r, done: nowDone };
     }));
   };
@@ -415,8 +453,10 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
   };
 
   const cancelEdit = () => setEditingId(null);
-  const todayItems = reminders.filter((r) => r.section === "today");
-  const upcomingItems = reminders.filter((r) => r.section === "upcoming");
+  const activeReminders = reminders.filter((r) => !r.archived);
+  const archivedReminders = reminders.filter((r) => r.archived);
+  const todayItems = activeReminders.filter((r) => r.section === "today");
+  const upcomingItems = activeReminders.filter((r) => r.section === "upcoming");
   const repeatLabel = (val) => { const f = repeatOptions.find((o) => o.value === val); return f && val !== "none" ? f.label : null; };
 
   const inputStyle = { width: "100%", padding: "10px 12px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
@@ -479,7 +519,8 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
         </div>
         {todayItems.length > 0 && <><SectionLabel label="Today" />{todayItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {upcomingItems.length > 0 && <><SectionLabel label="Upcoming" />{upcomingItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
-        {reminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
+        {activeReminders.length === 0 && archivedReminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
+        {archivedReminders.length > 0 && <ArchiveSection reminders={archivedReminders} setReminders={setReminders} />}
         <div style={{ padding: "20px" }}>
           <button onClick={() => setShowAddSheet(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: "14px", borderRadius: "12px", backgroundColor: "#f5f5f5", border: "none", fontSize: "16px", color: "#555", cursor: "pointer", fontFamily: "inherit" }}>
             <Plus size={18} color="#555" /> Add Reminder
@@ -1358,7 +1399,7 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
       if (nowDone) setTimeout(async () => {
         await supabase.from('reminders').delete().eq('id', id);
         setReminders((curr) => curr.filter((x) => x.id !== id));
-      }, 60 * 60 * 1000);
+      }, 2 * 60 * 1000);
       return { ...r, done: nowDone };
     }));
   };
@@ -1892,7 +1933,7 @@ function App() {
         // Reminders
         let { data: remindersData } = await supabase.from('reminders').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (remindersData && remindersData.length > 0) {
-          setSharedReminders(remindersData.map((r) => ({ id: r.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done })));
+          setSharedReminders(remindersData.map((r) => ({ id: r.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: r.done, archived: r.archived || false })));
         }
 
         // Medications
