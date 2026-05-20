@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 import { useState, useEffect, useCallback } from "react";
-import { Bell, ClipboardList, Puzzle, Camera, Settings, X, ChevronRight, Plus, Pill, Phone } from "lucide-react";
+import { Bell, ClipboardList, Puzzle, Camera, Settings, X, ChevronRight, Plus, Pill, Phone, Sun, Cloud, CloudRain, CloudSnow, CloudLightning, CloudSun } from "lucide-react";
 
 const menuItems = [
   { label: "Reminders", icon: Bell },
@@ -37,15 +37,6 @@ const initialRoutineData = [
     { id: 12, label: "Wind down and get ready for bed", time: "9:00 PM" },
   ]},
 ];
-
-function getSeason() {
-  const month = new Date().getMonth();
-  if (month >= 2 && month <= 4) return "Spring";
-  if (month >= 5 && month <= 7) return "Summer";
-  if (month >= 8 && month <= 10) return "Autumn";
-  return "Winter";
-}
-
 
 
 function useBodyScrollLock(active) {
@@ -1749,43 +1740,65 @@ function SimpleMathGame() {
   );
 }
 
-// ── Season Card ────────────────────────────────────────────────────────────
-const seasonalHomeImages = {
-  Spring: ["https://picsum.photos/seed/springA/800/400","https://picsum.photos/seed/springB/800/400","https://picsum.photos/seed/springC/800/400"],
-  Summer: ["https://picsum.photos/seed/summerA/800/400","https://picsum.photos/seed/summerB/800/400","https://picsum.photos/seed/summerC/800/400"],
-  Autumn: ["https://picsum.photos/seed/autumnA/800/400","https://picsum.photos/seed/autumnB/800/400","https://picsum.photos/seed/autumnC/800/400"],
-  Winter: ["https://picsum.photos/seed/winterA/800/400","https://picsum.photos/seed/winterB/800/400","https://picsum.photos/seed/winterC/800/400"],
-};
+function WeatherCard() {
+  const [weather, setWeather] = useState(null);
+  const [error, setError] = useState(false);
 
-function SeasonCard() {
-  const season = getSeason();
-  const images = seasonalHomeImages[season];
-  const [index, setIndex] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setIndex((prev) => (prev + 1) % images.length), 4000);
-    return () => clearInterval(t);
-  }, [season, images.length]);
-  const seasonColors = {
-    Spring: { bg: "#f0faf0", label: "#4a9e5c", border: "#c8e6c9" },
-    Summer: { bg: "#fff8ee", label: "#d4900a", border: "#fde8c0" },
-    Autumn: { bg: "#fff3ee", label: "#c0622a", border: "#f5cdb0" },
-    Winter: { bg: "#eef4ff", label: "#4a90e2", border: "#c8d8f5" },
+    if (!navigator.geolocation) { setError(true); return; }
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const { latitude, longitude } = pos.coords;
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&temperature_unit=fahrenheit`);
+        const data = await res.json();
+        const code = data.current_weather.weathercode;
+        const temp = Math.round(data.current_weather.temperature);
+        const getCondition = (c) => {
+          if (c === 0) return { label: "Clear", color: "#f5a623" };
+          if (c <= 2) return { label: "Mostly Clear", color: "#f5a623" };
+          if (c === 3) return { label: "Overcast", color: "#888" };
+          if (c <= 48) return { label: "Foggy", color: "#aaa" };
+          if (c <= 55) return { label: "Drizzle", color: "#4a90e2" };
+          if (c <= 65) return { label: "Rain", color: "#4a90e2" };
+          if (c <= 75) return { label: "Snow", color: "#88c0d0" };
+          if (c <= 82) return { label: "Showers", color: "#4a90e2" };
+          return { label: "Thunderstorm", color: "#7c5cbf" };
+        };
+        setWeather({ temp, condition: getCondition(code), code });
+      } catch {
+        setError(true);
+      }
+    }, () => setError(true));
+  }, []);
+
+  const WeatherIcon = ({ code, color }) => {
+    const s = { color, flexShrink: 0 };
+    if (code === 0) return <Sun size={48} style={s} />;
+    if (code <= 2) return <CloudSun size={48} style={s} />;
+    if (code === 3) return <Cloud size={48} style={s} />;
+    if (code <= 48) return <Cloud size={48} style={{ ...s, color: "#aaa" }} />;
+    if (code <= 65) return <CloudRain size={48} style={s} />;
+    if (code <= 75) return <CloudSnow size={48} style={s} />;
+    if (code <= 82) return <CloudRain size={48} style={s} />;
+    return <CloudLightning size={48} style={s} />;
   };
-  const colors = seasonColors[season];
+
+  if (error) return null;
+
   return (
-    <div style={{ margin: "0 20px 16px 20px", borderRadius: "20px", overflow: "hidden", border: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
-      <div style={{ position: "relative", height: "140px", overflow: "hidden" }}>
-        <img key={index} src={images[index]} alt={season} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(transparent 40%, rgba(0,0,0,0.45))" }} />
-        <div style={{ position: "absolute", bottom: "12px", left: "16px" }}>
-          <p style={{ margin: 0, fontSize: "20px", fontWeight: "600", color: "white" }}>It is {season}</p>
-        </div>
-        <div style={{ position: "absolute", bottom: "14px", right: "14px", display: "flex", gap: "6px" }}>
-          {images.map((_, i) => (
-            <div key={i} onClick={() => setIndex(i)} style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: i === index ? "white" : "rgba(255,255,255,0.4)", cursor: "pointer", transition: "background-color 0.2s" }} />
-          ))}
-        </div>
-      </div>
+    <div style={{ margin: "0 20px 16px 20px", backgroundColor: "#f0f4ff", borderRadius: "20px", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      {weather ? (
+        <>
+          <div>
+            <p style={{ margin: "0 0 2px 0", fontSize: "14px", color: "#7a9fd4" }}>Current Weather</p>
+            <p style={{ margin: 0, fontSize: "36px", fontWeight: "700", color: "#333" }}>{weather.temp}°F</p>
+            <p style={{ margin: "4px 0 0 0", fontSize: "15px", color: "#7a9fd4" }}>{weather.condition.label}</p>
+          </div>
+          <WeatherIcon code={weather.code} color={weather.condition.color} />
+        </>
+      ) : (
+        <p style={{ margin: 0, fontSize: "15px", color: "#aaa" }}>Loading weather...</p>
+      )}
     </div>
   );
 }
@@ -1975,7 +1988,7 @@ function App() {
         <LiveClock />
       </div>
 
-      <SeasonCard />
+      <WeatherCard />
 
       {(upcomingReminders.length > 0 || nextRoutineItem || nextMedication) && (
         <div style={{ margin: "0 20px 16px 20px" }}>
