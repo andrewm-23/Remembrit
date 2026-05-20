@@ -38,13 +38,6 @@ const initialRoutineData = [
   ]},
 ];
 
-function getSeason() {
-  const month = new Date().getMonth();
-  if (month >= 2 && month <= 4) return "Spring";
-  if (month >= 5 && month <= 7) return "Summer";
-  if (month >= 8 && month <= 10) return "Autumn";
-  return "Winter";
-}
 
 function useBodyScrollLock(active) {
   useEffect(() => {
@@ -54,6 +47,7 @@ function useBodyScrollLock(active) {
   }, [active]);
 }
 
+// ── Upload to Supabase Storage ─────────────────────────────────────────────
 async function uploadToStorage(file, userId, folder) {
   const ext = file.name.split('.').pop();
   const fileName = `${folder}/${userId}/${Date.now()}.${ext}`;
@@ -63,16 +57,26 @@ async function uploadToStorage(file, userId, folder) {
   return data.publicUrl;
 }
 
-// ── Welcome Screen ─────────────────────────────────────────────────────────
+// ── Welcome Screen (shown once after onboarding) ───────────────────────────
 function WelcomeScreen({ name, onDone }) {
   const [fading, setFading] = useState(false);
+
   useEffect(() => {
     const t1 = setTimeout(() => setFading(true), 1800);
     const t2 = setTimeout(() => onDone(), 2400);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [onDone]);
+
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#4a90e2", zIndex: 3000, maxWidth: "390px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: fading ? 0 : 1, transition: "opacity 0.6s ease" }}>
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: "#4a90e2", zIndex: 3000,
+      maxWidth: "390px", margin: "0 auto",
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      opacity: fading ? 0 : 1,
+      transition: "opacity 0.6s ease",
+    }}>
       <p style={{ margin: "0 0 10px 0", fontSize: "17px", color: "rgba(255,255,255,0.8)", fontFamily: "'Inter', sans-serif" }}>Welcome to Remembrit</p>
       <h1 style={{ margin: 0, fontSize: "38px", fontWeight: "600", color: "white", fontFamily: "'Inter', sans-serif" }}>{name}</h1>
     </div>
@@ -88,7 +92,11 @@ function AuthScreen() {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
 
-  const inputStyle = { width: "100%", padding: "14px", fontSize: "16px", border: "1px solid #eee", borderRadius: "12px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
+  const inputStyle = {
+    width: "100%", padding: "14px", fontSize: "16px",
+    border: "1px solid #eee", borderRadius: "12px", fontFamily: "inherit",
+    color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none",
+  };
 
   const handleSubmit = async () => {
     setLoading(true); setError(null); setMessage(null);
@@ -104,14 +112,20 @@ function AuthScreen() {
   };
 
   return (
-    <div style={{ maxWidth: "390px", margin: "0 auto", minHeight: "100vh", backgroundColor: "#fff", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", justifyContent: "center", padding: "24px 24px" }}>
-      <div style={{ textAlign: "center", marginBottom: "28px" }}>
+    <div style={{ maxWidth: "390px", margin: "0 auto", minHeight: "100vh", backgroundColor: "#fff", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px 24px" }}>
+      <div style={{ textAlign: "center", marginBottom: "48px" }}>
         <h1 style={{ margin: "0 0 8px 0", fontSize: "36px", color: "#333", fontWeight: "600" }}>Remembrit</h1>
         <p style={{ margin: 0, fontSize: "16px", color: "#aaa" }}>Care made simple</p>
       </div>
       <div style={{ display: "flex", backgroundColor: "#f5f5f5", borderRadius: "12px", padding: "4px", marginBottom: "28px" }}>
-        <button onClick={() => { setMode("signin"); setError(null); setMessage(null); }} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", backgroundColor: mode === "signin" ? "#fff" : "transparent", color: mode === "signin" ? "#333" : "#aaa", fontSize: "15px", fontWeight: "500", cursor: "pointer", fontFamily: "inherit", boxShadow: mode === "signin" ? "0 1px 4px rgba(0,0,0,0.08)" : "none", transition: "all 0.2s" }}>Sign In</button>
-        <button onClick={() => { setMode("signup"); setError(null); setMessage(null); }} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", backgroundColor: mode === "signup" ? "#fff" : "transparent", color: mode === "signup" ? "#333" : "#aaa", fontSize: "15px", fontWeight: "500", cursor: "pointer", fontFamily: "inherit", boxShadow: mode === "signup" ? "0 1px 4px rgba(0,0,0,0.08)" : "none", transition: "all 0.2s" }}>Sign Up</button>
+        <button onClick={() => { setMode("signin"); setError(null); setMessage(null); }}
+          style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", backgroundColor: mode === "signin" ? "#fff" : "transparent", color: mode === "signin" ? "#333" : "#aaa", fontSize: "15px", fontWeight: "500", cursor: "pointer", fontFamily: "inherit", boxShadow: mode === "signin" ? "0 1px 4px rgba(0,0,0,0.08)" : "none", transition: "all 0.2s" }}>
+          Sign In
+        </button>
+        <button onClick={() => { setMode("signup"); setError(null); setMessage(null); }}
+          style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", backgroundColor: mode === "signup" ? "#fff" : "transparent", color: mode === "signup" ? "#333" : "#aaa", fontSize: "15px", fontWeight: "500", cursor: "pointer", fontFamily: "inherit", boxShadow: mode === "signup" ? "0 1px 4px rgba(0,0,0,0.08)" : "none", transition: "all 0.2s" }}>
+          Sign Up
+        </button>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
         <input style={inputStyle} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -119,7 +133,8 @@ function AuthScreen() {
       </div>
       {error && <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#e25555", textAlign: "center" }}>{error}</p>}
       {message && <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#3a7d44", textAlign: "center" }}>{message}</p>}
-      <button onClick={handleSubmit} disabled={loading || !email || !password} style={{ width: "100%", padding: "16px", borderRadius: "14px", border: "none", backgroundColor: email && password ? "#4a90e2" : "#ddd", color: email && password ? "white" : "#aaa", fontSize: "17px", fontWeight: "600", cursor: email && password ? "pointer" : "default", fontFamily: "inherit", transition: "background-color 0.2s" }}>
+      <button onClick={handleSubmit} disabled={loading || !email || !password}
+        style={{ width: "100%", padding: "16px", borderRadius: "14px", border: "none", backgroundColor: email && password ? "#4a90e2" : "#ddd", color: email && password ? "white" : "#aaa", fontSize: "17px", fontWeight: "600", cursor: email && password ? "pointer" : "default", fontFamily: "inherit", transition: "background-color 0.2s" }}>
         {loading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
       </button>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');`}</style>
@@ -137,7 +152,11 @@ function OnboardingScreen({ session, onComplete }) {
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const inputStyle = { width: "100%", padding: "14px", fontSize: "16px", border: "1px solid #eee", borderRadius: "12px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
+  const inputStyle = {
+    width: "100%", padding: "14px", fontSize: "16px",
+    border: "1px solid #eee", borderRadius: "12px", fontFamily: "inherit",
+    color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none",
+  };
   const labelStyle = { display: "block", fontSize: "13px", color: "#aaa", marginBottom: "6px", fontWeight: "500" };
 
   const steps = [
@@ -152,7 +171,9 @@ function OnboardingScreen({ session, onComplete }) {
           </div>
           <div>
             <label style={labelStyle}>A short description about them</label>
-            <textarea style={{ ...inputStyle, height: "90px", resize: "none" }} placeholder="e.g. You live in Acton, Massachusetts. You love gardening and classical music." value={bio} onChange={(e) => setBio(e.target.value)} />
+            <textarea style={{ ...inputStyle, height: "90px", resize: "none" }}
+              placeholder="e.g. You live in Acton, Massachusetts. You love gardening and classical music."
+              value={bio} onChange={(e) => setBio(e.target.value)} />
           </div>
         </div>
       ),
@@ -192,7 +213,9 @@ function OnboardingScreen({ session, onComplete }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div>
             <label style={labelStyle}>4-digit PIN</label>
-            <input style={{ ...inputStyle, fontSize: "24px", letterSpacing: "8px", textAlign: "center" }} type="tel" maxLength={4} placeholder="· · · ·" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} />
+            <input style={{ ...inputStyle, fontSize: "24px", letterSpacing: "8px", textAlign: "center" }}
+              type="tel" maxLength={4} placeholder="· · · ·"
+              value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} />
           </div>
           <p style={{ margin: 0, fontSize: "13px", color: "#aaa", textAlign: "center" }}>You can change this later in Settings.</p>
         </div>
@@ -221,7 +244,17 @@ function OnboardingScreen({ session, onComplete }) {
         return age;
       };
       const age = computeAge(birthday);
-      await supabase.from('patient_info').upsert({ profile_id: session.user.id, name: name.trim(), bio: bio.trim(), birthday, address: address.trim(), age, photo: "", pin: pin || "1234", onboarded: true });
+      await supabase.from('patient_info').upsert({
+        profile_id: session.user.id,
+        name: name.trim(),
+        bio: bio.trim(),
+        birthday,
+        address: address.trim(),
+        age,
+        photo: "",
+        pin: pin || "1234",
+        onboarded: true,
+      });
       onComplete({ name: name.trim(), bio: bio.trim(), birthday, address: address.trim(), age, photo: "", pin: pin || "1234", profileId: session.user.id });
     } catch (err) {
       console.error("Onboarding error:", err);
@@ -232,14 +265,17 @@ function OnboardingScreen({ session, onComplete }) {
   return (
     <div style={{ maxWidth: "390px", margin: "0 auto", minHeight: "100vh", backgroundColor: "#fff", fontFamily: "'Inter', sans-serif", display: "flex", flexDirection: "column", padding: "60px 24px 40px 24px" }}>
       <div style={{ display: "flex", gap: "6px", marginBottom: "40px" }}>
-        {steps.map((_, i) => <div key={i} style={{ flex: 1, height: "3px", borderRadius: "2px", backgroundColor: i <= step ? "#4a90e2" : "#eee", transition: "background-color 0.3s" }} />)}
+        {steps.map((_, i) => (
+          <div key={i} style={{ flex: 1, height: "3px", borderRadius: "2px", backgroundColor: i <= step ? "#4a90e2" : "#eee", transition: "background-color 0.3s" }} />
+        ))}
       </div>
       <div style={{ flex: 1 }}>
         <h1 style={{ margin: "0 0 8px 0", fontSize: "26px", color: "#333", fontWeight: "600" }}>{current.title}</h1>
         <p style={{ margin: "0 0 32px 0", fontSize: "15px", color: "#aaa", lineHeight: "1.5" }}>{current.subtitle}</p>
         {current.content}
       </div>
-      <button onClick={handleNext} disabled={!current.canAdvance || loading} style={{ width: "100%", padding: "16px", borderRadius: "14px", border: "none", backgroundColor: current.canAdvance ? "#4a90e2" : "#ddd", color: current.canAdvance ? "white" : "#aaa", fontSize: "17px", fontWeight: "600", cursor: current.canAdvance ? "pointer" : "default", fontFamily: "inherit", marginTop: "32px", transition: "background-color 0.2s" }}>
+      <button onClick={handleNext} disabled={!current.canAdvance || loading}
+        style={{ width: "100%", padding: "16px", borderRadius: "14px", border: "none", backgroundColor: current.canAdvance ? "#4a90e2" : "#ddd", color: current.canAdvance ? "white" : "#aaa", fontSize: "17px", fontWeight: "600", cursor: current.canAdvance ? "pointer" : "default", fontFamily: "inherit", marginTop: "32px", transition: "background-color 0.2s" }}>
         {loading ? "Setting up..." : step < steps.length - 1 ? "Continue" : "Get Started"}
       </button>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');`}</style>
@@ -250,15 +286,18 @@ function OnboardingScreen({ session, onComplete }) {
 // ── Caregiver Transition ───────────────────────────────────────────────────
 function CaregiverTransition({ direction, onComplete }) {
   const [phase, setPhase] = useState("in");
+
   const stableOnComplete = useCallback(onComplete, [onComplete]);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
     const t1 = setTimeout(() => setPhase("out"), 600);
     const t2 = setTimeout(() => stableOnComplete(), 1100);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [stableOnComplete]);
+
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: direction === "unlock" ? "#4a90e2" : "#333", zIndex: 2000, maxWidth: "390px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", opacity: phase === "in" ? 1 : 0, transition: "opacity 0.5s ease" }}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: direction === "unlock" ? "#4a90e2" : "#333", zIndex: 2000, maxWidth: "390px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", opacity: phase === "in" ? 1 : 0, transition: "opacity 0.5s ease" }}>
       <p style={{ margin: 0, fontSize: "15px", color: "rgba(255,255,255,0.9)", fontWeight: "500", letterSpacing: "0.05em" }}>
         {direction === "unlock" ? "Switching to Caregiver View" : "Returning to Patient View"}
       </p>
@@ -299,13 +338,16 @@ function CaregiverPINScreen({ onClose, onUnlock, correctPin }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
         <p style={{ fontSize: "16px", color: "#888", marginBottom: "32px" }}>Enter your PIN</p>
         <div style={{ display: "flex", gap: "20px", marginBottom: "48px", animation: shake ? "shake 0.4s ease" : "none" }}>
-          {[0,1,2,3].map((i) => <div key={i} style={{ width: "18px", height: "18px", borderRadius: "50%", backgroundColor: digits.length > i ? (error ? "#e25555" : "#4a90e2") : "#ddd", transition: "background-color 0.15s" }} />)}
+          {[0,1,2,3].map((i) => (
+            <div key={i} style={{ width: "18px", height: "18px", borderRadius: "50%", backgroundColor: digits.length > i ? (error ? "#e25555" : "#4a90e2") : "#ddd", transition: "background-color 0.15s" }} />
+          ))}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", width: "100%", maxWidth: "280px" }}>
           {keys.map((key, i) => {
             if (key === null) return <div key={i} />;
             return (
-              <button key={i} onClick={() => key === "del" ? handleDelete() : handleDigit(String(key))} style={{ width: "72px", height: "72px", borderRadius: "50%", border: "none", backgroundColor: key === "del" ? "transparent" : "#f5f5f5", fontSize: key === "del" ? "14px" : "26px", color: key === "del" ? "#888" : "#333", cursor: "pointer", fontFamily: "inherit", fontWeight: "500", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <button key={i} onClick={() => key === "del" ? handleDelete() : handleDigit(String(key))}
+                style={{ width: "72px", height: "72px", borderRadius: "50%", border: "none", backgroundColor: key === "del" ? "transparent" : "#f5f5f5", fontSize: key === "del" ? "14px" : "26px", color: key === "del" ? "#888" : "#333", cursor: "pointer", fontFamily: "inherit", fontWeight: "500", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {key === "del" ? "⌫" : key}
               </button>
             );
@@ -318,7 +360,6 @@ function CaregiverPINScreen({ onClose, onUnlock, correctPin }) {
   );
 }
 
-// ── Archive Section (Reminders) ────────────────────────────────────────────
 function ArchiveSection({ reminders, setReminders }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -357,47 +398,7 @@ function ArchiveSection({ reminders, setReminders }) {
   );
 }
 
-// ── Archive Section (Medications) ──────────────────────────────────────────
-function MedArchiveSection({ medications, setMedicationList }) {
-  const [expanded, setExpanded] = useState(false);
-  const archived = medications.filter((m) => m.archived);
-
-  const restore = async (id) => {
-    await supabase.from('medications').update({ archived: false }).eq('id', id);
-    setMedicationList((prev) => prev.map((m) => m.id === id ? { ...m, archived: false } : m));
-  };
-
-  const deleteMed = async (id) => {
-    await supabase.from('medications').delete().eq('id', id);
-    setMedicationList((prev) => prev.filter((m) => m.id !== id));
-  };
-
-  return (
-    <div style={{ marginBottom: "24px" }}>
-      <div onClick={() => setExpanded((p) => !p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", paddingBottom: "10px", borderBottom: "1px solid #f0f0f0" }}>
-        <p style={{ margin: 0, fontSize: "12px", fontWeight: "600", color: "#aaa", letterSpacing: "0.06em", textTransform: "uppercase" }}>Archive ({archived.length})</p>
-        <ChevronRight size={16} color="#ccc" style={{ transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
-      </div>
-      {expanded && (
-        <div>
-          <p style={{ margin: "10px 0 12px 0", fontSize: "12px", color: "#bbb" }}>Archived medications are kept for reference and can be restored at any time.</p>
-          {archived.map((m) => (
-            <div key={m.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #f5f5f5" }}>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#aaa", textDecoration: "line-through" }}>{m.name}</p>
-                <p style={{ margin: 0, fontSize: "12px", color: "#ccc" }}>{m.dosage} — {m.time}</p>
-              </div>
-              <button onClick={() => restore(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#4a90e2", fontSize: "13px", fontFamily: "inherit", fontWeight: "500" }}>Restore</button>
-              <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px" }}>✕</button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Caregiver Reminders Page ───────────────────────────────────────────────
+// ── Caregiver Sub-Pages ────────────────────────────────────────────────────
 function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -411,12 +412,14 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
     if (!reminder) return;
     const nowDone = !reminder.done;
     await supabase.from('reminders').update({ done: nowDone }).eq('id', id);
-    if (nowDone) {
-      await supabase.from('reminders').update({ archived: true }).eq('id', id);
-      setReminders((prev) => prev.map((r) => r.id === id ? { ...r, done: true, archived: true } : r));
-    } else {
-      setReminders((prev) => prev.map((r) => r.id === id ? { ...r, done: false } : r));
-    }
+    setReminders((prev) => prev.map((r) => {
+      if (r.id !== id) return r;
+      if (nowDone) {
+        await supabase.from('reminders').update({ archived: true }).eq('id', id);
+        setReminders((curr) => curr.map((x) => x.id === id ? { ...x, archived: true } : x));
+      }
+      return { ...r, done: nowDone };
+    }));
   };
 
   const startEdit = (reminder) => {
@@ -430,6 +433,7 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
   const saveEdit = async () => {
     const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    let displayTime = editTime;
     let displayDate = editDate;
     let section = "today";
     if (editDate) {
@@ -438,8 +442,8 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
       const picked = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       if (picked > todayMidnight) { section = "upcoming"; displayDate = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`; }
     }
-    await supabase.from('reminders').update({ label: editLabel, time: editTime, date: displayDate, repeat: editRepeat, section }).eq('id', editingId);
-    setReminders((prev) => prev.map((r) => r.id === editingId ? { ...r, label: editLabel, time: editTime, date: displayDate, repeat: editRepeat, section } : r));
+    await supabase.from('reminders').update({ label: editLabel, time: displayTime, date: displayDate, repeat: editRepeat, section }).eq('id', editingId);
+    setReminders((prev) => prev.map((r) => r.id === editingId ? { ...r, label: editLabel, time: displayTime, date: displayDate, repeat: editRepeat, section } : r));
     setEditingId(null);
   };
 
@@ -448,11 +452,13 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
     setReminders((prev) => prev.filter((x) => x.id !== id));
   };
 
+  const cancelEdit = () => setEditingId(null);
   const activeReminders = reminders.filter((r) => !r.archived);
   const archivedReminders = reminders.filter((r) => r.archived);
   const todayItems = activeReminders.filter((r) => r.section === "today");
   const upcomingItems = activeReminders.filter((r) => r.section === "upcoming");
   const repeatLabel = (val) => { const f = repeatOptions.find((o) => o.value === val); return f && val !== "none" ? f.label : null; };
+
   const inputStyle = { width: "100%", padding: "10px 12px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
 
   const SectionLabel = ({ label, color }) => (
@@ -462,12 +468,15 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
   const ReminderItem = ({ reminder }) => {
     const sub = [reminder.date, reminder.time, repeatLabel(reminder.repeat)].filter(Boolean).join(" · ");
     const isEditing = editingId === reminder.id;
+
     if (isEditing) {
       return (
         <div style={{ padding: "14px 20px", borderBottom: "1px solid #f0f0f0", backgroundColor: "#fafafa" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <input style={inputStyle} value={editLabel} onChange={(e) => setEditLabel(e.target.value)} placeholder="Reminder title" />
-            <p style={{ margin: "0 0 2px 0", fontSize: "12px", color: "#aaa" }}>Current: {reminder.time || "no time"}{reminder.date ? ` · ${reminder.date}` : ""}</p>
+            <p style={{ margin: "0 0 4px 0", fontSize: "12px", color: "#aaa" }}>
+              Current: {reminder.time || "no time"}{reminder.date ? ` · ${reminder.date}` : ""}
+            </p>
             <input type="time" style={inputStyle} value={editTime} onChange={(e) => setEditTime(e.target.value)} />
             <input type="date" style={inputStyle} value={editDate} onChange={(e) => setEditDate(e.target.value)} />
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
@@ -477,12 +486,13 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
               <button onClick={saveEdit} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", backgroundColor: "#4a90e2", color: "white", fontSize: "14px", fontWeight: "600", cursor: "pointer", fontFamily: "inherit" }}>Save</button>
-              <button onClick={() => setEditingId(null)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", backgroundColor: "#f0f0f0", color: "#888", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+              <button onClick={cancelEdit} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", backgroundColor: "#f0f0f0", color: "#888", fontSize: "14px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
             </div>
           </div>
         </div>
       );
     }
+
     return (
       <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", padding: "14px 20px", borderBottom: "1px solid #f0f0f0" }}>
         <div onClick={() => toggle(reminder.id)} style={{ width: "24px", height: "24px", borderRadius: "50%", flexShrink: 0, marginTop: "2px", border: reminder.done ? "none" : "2px solid #ccc", backgroundColor: reminder.done ? "#4a90e2" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s", cursor: "pointer" }}>
@@ -518,14 +528,53 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
         </div>
       </div>
       {showAddSheet && <AddReminderSheet onClose={() => setShowAddSheet(false)} onSave={async (r) => {
-        const { data } = await supabase.from('reminders').insert({ profile_id: session?.user?.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: false, archived: false }).select().single();
-        if (data) setReminders((prev) => [...prev, { ...r, id: data.id, archived: false }]);
+        const { data } = await supabase.from('reminders').insert({ profile_id: session?.user?.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: false }).select().single();
+        if (data) setReminders((prev) => [...prev, { ...r, id: data.id }]);
       }} />}
     </>
   );
 }
 
-// ── Caregiver Medications Page ─────────────────────────────────────────────
+function MedArchiveSection({ medications, setMedicationList }) {
+  const [expanded, setExpanded] = useState(false);
+  const archived = medications.filter((m) => m.archived);
+
+  const restore = async (id) => {
+    await supabase.from('medications').update({ archived: false }).eq('id', id);
+    setMedicationList((prev) => prev.map((m) => m.id === id ? { ...m, archived: false } : m));
+  };
+
+  const deleteMed = async (id) => {
+    await supabase.from('medications').delete().eq('id', id);
+    setMedicationList((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  return (
+    <div style={{ marginBottom: "24px" }}>
+      <div onClick={() => setExpanded((p) => !p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", paddingBottom: "10px", borderBottom: "1px solid #f0f0f0" }}>
+        <p style={{ margin: 0, fontSize: "12px", fontWeight: "600", color: "#aaa", letterSpacing: "0.06em", textTransform: "uppercase" }}>Archive ({archived.length})</p>
+        <ChevronRight size={16} color="#ccc" style={{ transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
+      </div>
+      {expanded && (
+        <div>
+          <p style={{ margin: "10px 0 12px 0", fontSize: "12px", color: "#bbb" }}>Archived medications are kept for reference and can be restored at any time.</p>
+          {archived.map((m) => (
+            <div key={m.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 0", borderBottom: "1px solid #f5f5f5" }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#aaa", textDecoration: "line-through" }}>{m.name}</p>
+                <p style={{ margin: 0, fontSize: "12px", color: "#ccc" }}>{m.dosage} — {m.time}</p>
+              </div>
+              <button onClick={() => restore(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#4a90e2", fontSize: "13px", fontFamily: "inherit", fontWeight: "500" }}>Restore</button>
+              <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px" }}>✕</button>
+              <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px" }}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedReminders, setSharedReminders, session, onBack }) {
   const [newName, setNewName] = useState("");
   const [newDosage, setNewDosage] = useState("");
@@ -538,8 +587,9 @@ function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedRem
 
   const handleAdd = async () => {
     if (!newName.trim()) return;
-    const { data } = await supabase.from('medications').insert({ profile_id: session?.user?.id, name: newName.trim(), dosage: newDosage.trim(), time: newTime, archived: false }).select().single();
-    if (data) setMedicationList((prev) => [...prev, { id: data.id, name: data.name, dosage: data.dosage, time: data.time, archived: false }]);
+    const { data } = await supabase.from('medications').insert({ profile_id: session?.user?.id, name: newName.trim(), dosage: newDosage.trim(), time: newTime }).select().single();
+    if (data) setMedicationList((prev) => [...prev, { id: data.id, name: data.name, dosage: data.dosage, time: data.time }]);
+
     if (createReminder) {
       let displayTime = "";
       if (reminderTime) {
@@ -548,13 +598,13 @@ function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedRem
         const displayH = h % 12 || 12;
         displayTime = `${displayH}:${m.toString().padStart(2, "0")} ${ampm}`;
       }
-      const { data: rData } = await supabase.from('reminders').insert({ profile_id: session?.user?.id, label: `Take ${newName.trim()}${newDosage.trim() ? ` ${newDosage.trim()}` : ""}`, time: displayTime, date: "", repeat: "daily", section: "today", done: false, archived: false }).select().single();
-      if (rData) setSharedReminders((prev) => [...prev, { id: rData.id, label: rData.label, time: rData.time, date: rData.date, repeat: rData.repeat, section: rData.section, done: rData.done, archived: false }]);
+      const { data: rData } = await supabase.from('reminders').insert({ profile_id: session?.user?.id, label: `Take ${newName.trim()}${newDosage.trim() ? ` ${newDosage.trim()}` : ""}`, time: displayTime, date: "", repeat: "daily", section: "today", done: false }).select().single();
+      if (rData) setSharedReminders((prev) => [...prev, { id: rData.id, label: rData.label, time: rData.time, date: rData.date, repeat: rData.repeat, section: rData.section, done: rData.done }]);
     }
     setNewName(""); setNewDosage(""); setNewTime("Morning"); setCreateReminder(false); setReminderTime("");
   };
 
-  const archiveMed = async (id) => {
+  const deleteMed = async (id) => {
     await supabase.from('medications').update({ archived: true }).eq('id', id);
     setMedicationList((prev) => prev.map((m) => m.id === id ? { ...m, archived: true } : m));
   };
@@ -566,18 +616,22 @@ function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedRem
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Medications</h2>
       </div>
       <div style={{ padding: "24px 20px" }}>
-        {medicationList.filter((m) => !m.archived).length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No medications yet.</p>}
+        {medicationList.filter((m) => !m.archived).length === 0 && (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No medications yet.</p>
+        )}
         {medicationList.filter((m) => !m.archived).map((m) => (
           <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div>
               <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#333" }}>{m.name}</p>
               <p style={{ margin: 0, fontSize: "13px", color: "#aaa" }}>{m.dosage} — {m.time}</p>
             </div>
-            <button onClick={() => archiveMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "13px", fontFamily: "inherit", paddingLeft: "12px" }}>Archive</button>
+            <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "13px", fontFamily: "inherit", paddingLeft: "12px" }}>Archive</button>
           </div>
         ))}
         <div style={{ marginTop: "24px", display: "flex", flexDirection: "column", gap: "10px" }}>
-          {medicationList.filter((m) => m.archived).length > 0 && <MedArchiveSection medications={medicationList} setMedicationList={setMedicationList} />}
+          {medicationList.filter((m) => m.archived).length > 0 && (
+            <MedArchiveSection medications={medicationList} setMedicationList={setMedicationList} />
+          )}
           <p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#aaa", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Add New</p>
           <input style={inputStyle} placeholder="Medication name" value={newName} onChange={(e) => setNewName(e.target.value)} />
           <div style={{ display: "flex", gap: "8px" }}>
@@ -605,7 +659,6 @@ function CaregiverMedicationsPage({ medicationList, setMedicationList, sharedRem
   );
 }
 
-// ── Caregiver Contacts Page ────────────────────────────────────────────────
 function CaregiverContactsPage({ contactList, setContactList, session, onBack }) {
   const [newName, setNewName] = useState("");
   const [newRel, setNewRel] = useState("");
@@ -633,7 +686,9 @@ function CaregiverContactsPage({ contactList, setContactList, session, onBack })
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Contacts</h2>
       </div>
       <div style={{ padding: "24px 20px" }}>
-        {contactList.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No contacts yet.</p>}
+        {contactList.length === 0 && (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No contacts yet.</p>
+        )}
         {contactList.map((c) => (
           <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div>
@@ -655,7 +710,7 @@ function CaregiverContactsPage({ contactList, setContactList, session, onBack })
   );
 }
 
-// ── Family Members Page ────────────────────────────────────────────────────
+// ── Family Members Page (with Supabase Storage) ────────────────────────────
 function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack }) {
   const [newName, setNewName] = useState("");
   const [newRelationship, setNewRelationship] = useState("");
@@ -707,7 +762,9 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Family Photos</h2>
       </div>
       <div style={{ padding: "20px" }}>
-        {familyMembers.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No photos added yet.</p>}
+        {familyMembers.length === 0 && (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "15px", marginBottom: "24px" }}>No photos added yet.</p>
+        )}
         {familyMembers.map((member) => (
           <div key={member.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div style={{ width: "52px", height: "52px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: "#ddd" }}>
@@ -748,7 +805,7 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
   );
 }
 
-// ── Caregiver Settings Page ────────────────────────────────────────────────
+// ── Caregiver Settings Page (with Supabase Storage) ────────────────────────
 function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack }) {
   const [name, setName] = useState(patientInfo.name);
   const [bio, setBio] = useState(patientInfo.bio);
@@ -761,8 +818,12 @@ function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack })
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    setName(patientInfo.name); setBio(patientInfo.bio); setBirthday(patientInfo.birthday);
-    setAddress(patientInfo.address); setPhoto(patientInfo.photo || null); setPin(patientInfo.pin || "1234");
+    setName(patientInfo.name);
+    setBio(patientInfo.bio);
+    setBirthday(patientInfo.birthday);
+    setAddress(patientInfo.address);
+    setPhoto(patientInfo.photo || null);
+    setPin(patientInfo.pin || "1234");
   }, [patientInfo]);
 
   const inputStyle = { width: "100%", padding: "12px 14px", fontSize: "15px", border: "1px solid #eee", borderRadius: "10px", fontFamily: "inherit", color: "#333", backgroundColor: "#fafafa", boxSizing: "border-box", outline: "none" };
@@ -797,11 +858,11 @@ function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack })
       if (uploaded) finalPhoto = uploaded;
     }
     const age = computeAge(birthday);
-    setPatientInfo({ ...patientInfo, name, bio, birthday, address, photo: finalPhoto, age, pin });
+    const updatedInfo = { ...patientInfo, name, bio, birthday, address, photo: finalPhoto, age, pin };
+    setPatientInfo(updatedInfo);
     if (patientInfo.profileId) {
       await supabase.from('patient_info').update({ name, bio, birthday, address, photo: finalPhoto, age, pin }).eq('profile_id', patientInfo.profileId);
     }
-    setPhoto(finalPhoto);
     setPhotoFile(null);
     setUploading(false);
     setSaved(true);
@@ -853,7 +914,6 @@ function CaregiverSettingsPage({ patientInfo, setPatientInfo, session, onBack })
   );
 }
 
-// ── Caregiver Routine Page ─────────────────────────────────────────────────
 function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) {
   const [newLabels, setNewLabels] = useState({ Morning: "", Afternoon: "", Evening: "" });
   const [newTimes, setNewTimes] = useState({ Morning: "", Afternoon: "", Evening: "" });
@@ -890,7 +950,15 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
       minutes = h * 60 + m;
     }
     const isPast = minutes < currentMinutes;
-    const { data } = await supabase.from('routine_items').insert({ profile_id: session?.user?.id, section, label, time: displayTime, done: isPast, sort_order: Date.now() }).select().single();
+    const { data } = await supabase.from('routine_items').insert({
+      profile_id: session?.user?.id,
+      section,
+      label,
+      time: displayTime,
+      done: isPast,
+      sort_order: Date.now(),
+    }).select().single();
+
     if (data) {
       setRoutineData((prev) => prev.map((g) => {
         if (g.section !== section) return g;
@@ -921,7 +989,9 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
             <div key={group.section} style={{ marginBottom: "24px" }}>
               <p style={{ margin: "0 0 10px 0", fontSize: "13px", fontWeight: "600", color: colors.label, textTransform: "uppercase", letterSpacing: "0.06em" }}>{group.section}</p>
               <div style={{ backgroundColor: colors.bg, borderRadius: "16px", border: `1px solid ${colors.border}`, overflow: "hidden", marginBottom: "10px" }}>
-                {group.items.length === 0 && <p style={{ margin: 0, padding: "16px", fontSize: "14px", color: "#bbb", textAlign: "center" }}>No activities yet.</p>}
+                {group.items.length === 0 && (
+                  <p style={{ margin: 0, padding: "16px", fontSize: "14px", color: "#bbb", textAlign: "center" }}>No activities yet.</p>
+                )}
                 {group.items.map((item, index) => (
                   <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderBottom: index < group.items.length - 1 ? `1px solid ${colors.border}` : "none", opacity: item.done ? 0.45 : 1 }}>
                     <div style={{ flex: 1 }}>
@@ -951,24 +1021,32 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
 function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminders, sharedRoutine, setSharedRoutine, sharedMedications, setSharedMedications, sharedContacts, setSharedContacts, sharedPatientInfo, setSharedPatientInfo, familyMembers, setFamilyMembers }) {
   useBodyScrollLock(true);
   const [activePage, setActivePage] = useState(null);
-  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
-  const completedToday = sharedReminders.filter((r) => r.section === "today" && r.done && !r.archived).length;
-  const totalToday = sharedReminders.filter((r) => r.section === "today" && !r.archived).length;
-  const nextReminder = sharedReminders.find((r) => r.section === "today" && !r.done && !r.archived);
+  const reminders = sharedReminders;
+  const setReminders = setSharedReminders;
+  const medicationList = sharedMedications;
+  const setMedicationList = setSharedMedications;
+  const contactList = sharedContacts;
+  const setContactList = setSharedContacts;
+  const routineData = sharedRoutine;
+  const setRoutineData = setSharedRoutine;
 
-  if (activePage === "reminders") return <CaregiverRemindersPage reminders={sharedReminders} setReminders={setSharedReminders} session={session} onBack={() => setActivePage(null)} />;
-  if (activePage === "medications") return <CaregiverMedicationsPage medicationList={sharedMedications} setMedicationList={setSharedMedications} sharedReminders={sharedReminders} setSharedReminders={setSharedReminders} session={session} onBack={() => setActivePage(null)} />;
-  if (activePage === "contacts") return <CaregiverContactsPage contactList={sharedContacts} setContactList={setSharedContacts} session={session} onBack={() => setActivePage(null)} />;
-  if (activePage === "routine") return <CaregiverRoutinePage routineData={sharedRoutine} setRoutineData={setSharedRoutine} session={session} onBack={() => setActivePage(null)} />;
+  const completedToday = reminders.filter((r) => r.section === "today" && r.done).length;
+  const totalToday = reminders.filter((r) => r.section === "today").length;
+  const nextReminder = reminders.find((r) => r.section === "today" && !r.done);
+
+  if (activePage === "reminders") return <CaregiverRemindersPage reminders={reminders} setReminders={setReminders} session={session} onBack={() => setActivePage(null)} />;
+  if (activePage === "medications") return <CaregiverMedicationsPage medicationList={medicationList} setMedicationList={setMedicationList} sharedReminders={reminders} setSharedReminders={setReminders} session={session} onBack={() => setActivePage(null)} />;
+  if (activePage === "contacts") return <CaregiverContactsPage contactList={contactList} setContactList={setContactList} session={session} onBack={() => setActivePage(null)} />;
+  if (activePage === "routine") return <CaregiverRoutinePage routineData={routineData} setRoutineData={setRoutineData} session={session} onBack={() => setActivePage(null)} />;
   if (activePage === "settings") return <CaregiverSettingsPage patientInfo={sharedPatientInfo} setPatientInfo={setSharedPatientInfo} session={session} onBack={() => setActivePage(null)} />;
   if (activePage === "photos") return <FamilyMembersPage familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} session={session} onBack={() => setActivePage(null)} />;
 
   const caregiverMenuItems = [
     { label: "Reminders", icon: Bell, key: "reminders", count: `${completedToday}/${totalToday} done` },
-    { label: "Medications", icon: Pill, key: "medications", count: `${sharedMedications.filter((m) => !m.archived).length} medications` },
-    { label: "Contacts", icon: Phone, key: "contacts", count: `${sharedContacts.length} contacts` },
-    { label: "Routine", icon: ClipboardList, key: "routine", count: `${sharedRoutine.reduce((acc, g) => acc + g.items.length, 0)} activities` },
+    { label: "Medications", icon: Pill, key: "medications", count: `${medicationList.filter((m) => !m.archived).length} medications` },
+    { label: "Contacts", icon: Phone, key: "contacts", count: `${contactList.length} contacts` },
+    { label: "Routine", icon: ClipboardList, key: "routine", count: `${routineData.reduce((acc, g) => acc + g.items.length, 0)} activities` },
     { label: "Photos", icon: Camera, key: "photos", count: `${familyMembers.length} people` },
     { label: "Settings", icon: Settings, key: "settings", count: "Patient profile" },
   ];
@@ -979,9 +1057,9 @@ function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminde
         <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Caregiver View</h2>
         <button onClick={onLock} style={{ padding: "8px 16px", borderRadius: "20px", border: "1px solid #eee", backgroundColor: "#f5f5f5", fontSize: "14px", color: "#888", cursor: "pointer", fontFamily: "inherit" }}>Lock</button>
       </div>
-      <div style={{ padding: "16px 20px" }}>
-        <div style={{ backgroundColor: "#f0f4ff", borderRadius: "16px", padding: "16px 20px", marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "14px" }}>
+      <div style={{ padding: "24px 20px" }}>
+        <div style={{ backgroundColor: "#f0f4ff", borderRadius: "16px", padding: "20px", marginBottom: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
             <div style={{ width: "52px", height: "52px", borderRadius: "50%", backgroundColor: "#c8d8f5", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", color: "#4a90e2", fontWeight: "600" }}>
               {sharedPatientInfo.photo ? <img src={sharedPatientInfo.photo} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : sharedPatientInfo.name.charAt(0)}
             </div>
@@ -990,7 +1068,7 @@ function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminde
               <p style={{ margin: 0, fontSize: "13px", color: "#888" }}>{sharedPatientInfo.address}</p>
             </div>
           </div>
-          <div style={{ borderTop: "1px solid #dce8fb", paddingTop: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+          <div style={{ borderTop: "1px solid #dce8fb", paddingTop: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <p style={{ margin: 0, fontSize: "14px", color: "#888" }}>Today's reminders</p>
               <p style={{ margin: 0, fontSize: "14px", color: "#4a90e2", fontWeight: "500" }}>{completedToday} of {totalToday} completed</p>
@@ -1003,27 +1081,29 @@ function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminde
             )}
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <p style={{ margin: 0, fontSize: "14px", color: "#888" }}>Medications</p>
-              <p style={{ margin: 0, fontSize: "14px", color: "#333", fontWeight: "500" }}>{sharedMedications.filter((m) => !m.archived).length} active</p>
+              <p style={{ margin: 0, fontSize: "14px", color: "#333", fontWeight: "500" }}>{medicationList.filter((m) => !m.archived).length} active</p>
             </div>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
           {caregiverMenuItems.map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.key} onClick={() => setActivePage(item.key)} style={{ backgroundColor: "#f5f5f5", borderRadius: "16px", padding: "14px", cursor: "pointer" }}>
-                <Icon size={28} color="#555" />
-                <p style={{ fontSize: "15px", margin: "8px 0 3px 0", color: "#333", fontWeight: "500" }}>{item.label}</p>
+              <div key={item.key} onClick={() => setActivePage(item.key)} style={{ backgroundColor: "#f5f5f5", borderRadius: "16px", padding: "20px", cursor: "pointer" }}>
+                <Icon size={30} color="#555" />
+                <p style={{ fontSize: "16px", margin: "10px 0 4px 0", color: "#333", fontWeight: "500" }}>{item.label}</p>
                 <p style={{ fontSize: "12px", margin: 0, color: "#aaa" }}>{item.count}</p>
               </div>
             );
           })}
         </div>
-        <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid #f0f0f0", textAlign: "center" }}>
-          <p style={{ margin: "0 0 2px 0", fontSize: "12px", color: "#bbb" }}>Remembrit</p>
-          <p style={{ margin: "0 0 16px 0", fontSize: "11px", color: "#ccc" }}>Version 0.1.0</p>
+
+        {/* Sign out — buried at bottom, requires confirmation */}
+        <div style={{ marginTop: "40px", paddingTop: "24px", borderTop: "1px solid #f0f0f0", textAlign: "center" }}>
           {!showSignOutConfirm ? (
-            <button onClick={() => setShowSignOutConfirm(true)} style={{ background: "none", border: "none", fontSize: "13px", color: "#ccc", cursor: "pointer", fontFamily: "inherit" }}>Sign Out</button>
+            <button onClick={() => setShowSignOutConfirm(true)} style={{ background: "none", border: "none", fontSize: "13px", color: "#ccc", cursor: "pointer", fontFamily: "inherit" }}>
+              Sign Out
+            </button>
           ) : (
             <div>
               <p style={{ margin: "0 0 12px 0", fontSize: "14px", color: "#888" }}>Are you sure you want to sign out?</p>
@@ -1039,7 +1119,7 @@ function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminde
   );
 }
 
-// ── Settings Page Wrapper ──────────────────────────────────────────────────
+// ── Settings ───────────────────────────────────────────────────────────────
 function SettingsPage({ title, onClose, children }) {
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#fff", zIndex: 1100, overflowY: "auto", maxWidth: "390px", margin: "0 auto" }}>
@@ -1052,12 +1132,12 @@ function SettingsPage({ title, onClose, children }) {
   );
 }
 
-// ── Settings Screen (Patient) ──────────────────────────────────────────────
 function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders, sharedRoutine, setSharedRoutine, sharedMedications, setSharedMedications, sharedContacts, setSharedContacts, sharedPatientInfo, setSharedPatientInfo, familyMembers, setFamilyMembers }) {
   useBodyScrollLock(true);
   const [page, setPage] = useState(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
-  if (page === "photosView") return <FamilyMembersPage familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} session={session} onBack={() => setPage(null)} />;
+  if (page === "photos") return <FamilyMembersPage familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} session={session} onBack={() => setPage(null)} />;
 
   if (page === "personal") {
     const computedAge = sharedPatientInfo.birthday ? (() => {
@@ -1076,6 +1156,7 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
       }
       return null;
     })() : null;
+
     return (
       <SettingsPage title="Personal Information" onClose={() => setPage(null)}>
         <div style={{ marginBottom: "20px" }}><p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#aaa" }}>About</p><p style={{ margin: 0, fontSize: "18px", color: "#333", lineHeight: "1.5" }}>{sharedPatientInfo.bio}</p></div>
@@ -1157,6 +1238,10 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
     );
   }
 
+  if (page === "photosView") {
+    return <FamilyMembersPage familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} session={session} onBack={() => setPage(null)} />;
+  }
+
   if (page === "caregiver") return <CaregiverPINScreen onClose={() => setPage(null)} onUnlock={() => setPage("unlocking")} correctPin={sharedPatientInfo.pin} />;
 
   if (page === "unlocking") {
@@ -1218,6 +1303,8 @@ function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders,
           );
         })}
       </div>
+
+      {/* Sign out — buried at bottom, requires confirmation */}
       <div style={{ textAlign: "center", padding: "30px 20px" }}>
         <p style={{ margin: 0, fontSize: "12px", color: "#bbb" }}>Remembrit</p>
         <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: "#ccc" }}>Version 0.1.0</p>
@@ -1234,7 +1321,10 @@ function AddReminderSheet({ onClose, onSave }) {
   const [repeat, setRepeat] = useState("none");
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => { const t = setTimeout(() => setVisible(true), 10); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleClose = () => { setVisible(false); setTimeout(onClose, 300); };
 
@@ -1364,7 +1454,7 @@ function RoutineOverlay({ onClose, routineData }) {
   );
 }
 
-// ── Reminders Overlay (Patient) ────────────────────────────────────────────
+// ── Reminders Overlay ──────────────────────────────────────────────────────
 function RemindersOverlay({ onClose, reminders, setReminders, session }) {
   useBodyScrollLock(true);
   const [showAddSheet, setShowAddSheet] = useState(false);
@@ -1374,12 +1464,14 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
     if (!reminder) return;
     const nowDone = !reminder.done;
     await supabase.from('reminders').update({ done: nowDone }).eq('id', id);
-    if (nowDone) {
-      await supabase.from('reminders').update({ archived: true }).eq('id', id);
-      setReminders((prev) => prev.map((r) => r.id === id ? { ...r, done: true, archived: true } : r));
-    } else {
-      setReminders((prev) => prev.map((r) => r.id === id ? { ...r, done: false } : r));
-    }
+    setReminders((prev) => prev.map((r) => {
+      if (r.id !== id) return r;
+      if (nowDone) {
+        await supabase.from('reminders').update({ archived: true }).eq('id', id);
+        setReminders((curr) => curr.map((x) => x.id === id ? { ...x, archived: true } : x));
+      }
+      return { ...r, done: nowDone };
+    }));
   };
 
   const now = new Date();
@@ -1392,15 +1484,13 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
     if (ampm === "AM" && h === 12) h = 0;
     return h * 60 + m;
   };
-
-  const activeReminders = reminders.filter((r) => !r.archived);
-  const overdueItems = activeReminders.filter((r) => r.section === "today" && !r.done && parseTimeToMinutes(r.time) !== null && parseTimeToMinutes(r.time) < currentMinutes);
-  const todayItems = activeReminders.filter((r) => r.section === "today" && !overdueItems.includes(r));
-  const upcomingItems = activeReminders.filter((r) => r.section === "upcoming");
+  const overdueItems = reminders.filter((r) => r.section === "today" && !r.done && parseTimeToMinutes(r.time) !== null && parseTimeToMinutes(r.time) < currentMinutes);
+  const todayItems = reminders.filter((r) => r.section === "today" && !overdueItems.includes(r));
+  const upcomingItems = reminders.filter((r) => r.section === "upcoming");
   const repeatLabel = (val) => { const f = repeatOptions.find((o) => o.value === val); return f && val !== "none" ? f.label : null; };
 
-  const SectionLabel = ({ label, color }) => (
-    <p style={{ margin: "20px 20px 4px 20px", fontSize: "12px", fontWeight: "600", color: color || "#aaa", letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</p>
+  const SectionLabel = ({ label }) => (
+    <p style={{ margin: "20px 20px 4px 20px", fontSize: "12px", fontWeight: "600", color: "#aaa", letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</p>
   );
 
   const ReminderItem = ({ reminder }) => {
@@ -1428,7 +1518,7 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
         {overdueItems.length > 0 && <><SectionLabel label="Overdue" color="#e25555" />{overdueItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {todayItems.length > 0 && <><SectionLabel label="Today" />{todayItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {upcomingItems.length > 0 && <><SectionLabel label="Upcoming" />{upcomingItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
-        {activeReminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
+        {reminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
         <div style={{ padding: "20px" }}>
           <button onClick={() => setShowAddSheet(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: "14px", borderRadius: "12px", backgroundColor: "#f5f5f5", border: "none", fontSize: "16px", color: "#555", cursor: "pointer", fontFamily: "inherit" }}>
             <Plus size={18} color="#555" /> Add Reminder
@@ -1436,8 +1526,8 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
         </div>
       </div>
       {showAddSheet && <AddReminderSheet onClose={() => setShowAddSheet(false)} onSave={async (r) => {
-        const { data } = await supabase.from('reminders').insert({ profile_id: session?.user?.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: false, archived: false }).select().single();
-        if (data) setReminders((prev) => [...prev, { ...r, id: data.id, archived: false }]);
+        const { data } = await supabase.from('reminders').insert({ profile_id: session?.user?.id, label: r.label, time: r.time, date: r.date, repeat: r.repeat, section: r.section, done: false }).select().single();
+        if (data) setReminders((prev) => [...prev, { ...r, id: data.id }]);
       }} />}
     </>
   );
@@ -1478,7 +1568,8 @@ function PhotosOverlay({ onClose, familyMembers }) {
   const slideStyle = { transform: sliding === "left" ? "translateX(-100%)" : sliding === "right" ? "translateX(100%)" : "translateX(0)", transition: sliding ? "transform 0.4s ease-in-out" : "none" };
 
   return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", backgroundColor: "#000", zIndex: 1000, maxWidth: "390px", margin: "0 auto", overflow: "hidden" }} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", backgroundColor: "#000", zIndex: 1000, maxWidth: "390px", margin: "0 auto", overflow: "hidden" }}
+      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 10, padding: "20px", display: "flex", justifyContent: "flex-end", background: "linear-gradient(rgba(0,0,0,0.5), transparent)" }}>
         <X size={28} color="white" style={{ cursor: "pointer" }} onClick={onClose} />
       </div>
@@ -1488,7 +1579,9 @@ function PhotosOverlay({ onClose, familyMembers }) {
         <p style={{ margin: 0, fontSize: "22px", color: "rgba(255,255,255,0.85)" }}>{member.relationship}</p>
       </div>
       <div style={{ position: "absolute", bottom: "20px", left: 0, right: 0, display: "flex", justifyContent: "center", gap: "8px" }}>
-        {familyMembers.map((_, i) => <div key={i} onClick={() => setCurrent(i)} style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: i === current ? "white" : "rgba(255,255,255,0.4)", cursor: "pointer", transition: "background-color 0.2s" }} />)}
+        {familyMembers.map((_, i) => (
+          <div key={i} onClick={() => setCurrent(i)} style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: i === current ? "white" : "rgba(255,255,255,0.4)", cursor: "pointer", transition: "background-color 0.2s" }} />
+        ))}
       </div>
       {familyMembers.length > 1 && (
         <>
@@ -1557,6 +1650,7 @@ function MemoryMatchGame() {
     for (let i = pairs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pairs[i], pairs[j]] = [pairs[j], pairs[i]]; }
     return pairs;
   };
+
   const [cards, setCards] = useState(makeCards);
   const [selected, setSelected] = useState([]);
   const [locked, setLocked] = useState(false);
@@ -1774,7 +1868,6 @@ function SimpleMathGame() {
   );
 }
 
-// ── Weather Card ───────────────────────────────────────────────────────────
 function WeatherCard() {
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState(false);
@@ -1822,7 +1915,13 @@ function WeatherCard() {
 
   return (
     <div style={{ margin: "0 20px 16px 20px", borderRadius: "20px", overflow: "hidden", position: "relative", height: "110px" }}>
-      {weather && <img src={weather.condition.image} alt={weather.condition.label} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />}
+      {weather && (
+        <img
+          src={weather.condition.image}
+          alt={weather.condition.label}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+      )}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 100%)" }} />
       <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px", height: "100%", boxSizing: "border-box" }}>
         {weather ? (
@@ -1842,7 +1941,6 @@ function WeatherCard() {
   );
 }
 
-// ── Live Clock ─────────────────────────────────────────────────────────────
 function LiveClock() {
   const [time, setTime] = useState(new Date());
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
@@ -1867,11 +1965,19 @@ function App() {
   const [sharedRoutine, setSharedRoutine] = useState(initialRoutineData);
   const [sharedMedications, setSharedMedications] = useState([]);
   const [sharedContacts, setSharedContacts] = useState([]);
-  const [sharedPatientInfo, setSharedPatientInfo] = useState({ name: "My Loved One", bio: "", birthday: "", age: 0, address: "", photo: "", pin: "1234", profileId: null });
+  const [sharedPatientInfo, setSharedPatientInfo] = useState({
+    name: "My Loved One", bio: "", birthday: "", age: 0,
+    address: "", photo: "", pin: "1234", profileId: null,
+  });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setAuthLoading(false); });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -1880,20 +1986,22 @@ function App() {
     const loadData = async () => {
       try {
         // Profile
-        const { data: profile } = await supabase.from('profiles').select('id').eq('id', session.user.id).single();
+        let { data: profile } = await supabase.from('profiles').select('id').eq('id', session.user.id).single();
         if (!profile) await supabase.from('profiles').insert({ id: session.user.id, email: session.user.email });
 
-        // Patient info
-        const { data: info } = await supabase.from('patient_info').select('*').eq('profile_id', session.user.id).single();
+        // Patient info — check if onboarded
+        let { data: info } = await supabase.from('patient_info').select('*').eq('profile_id', session.user.id).single();
         if (!info) {
           setShowOnboarding(true);
         } else {
-          if (!info.onboarded) setShowOnboarding(true);
+          if (!info.onboarded) {
+            setShowOnboarding(true);
+          }
           setSharedPatientInfo({ name: info.name, bio: info.bio, birthday: info.birthday, age: info.age, address: info.address, photo: info.photo, pin: info.pin, profileId: session.user.id });
         }
 
-        // Reminders — auto-archive any that are done but not yet archived
-        const { data: remindersData } = await supabase.from('reminders').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
+        // Reminders
+        let { data: remindersData } = await supabase.from('reminders').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (remindersData && remindersData.length > 0) {
           const toArchive = remindersData.filter((r) => r.done && !r.archived);
           if (toArchive.length > 0) {
@@ -1907,19 +2015,19 @@ function App() {
         }
 
         // Medications
-        const { data: medsData } = await supabase.from('medications').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
+        let { data: medsData } = await supabase.from('medications').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (medsData && medsData.length > 0) {
           setSharedMedications(medsData.map((m) => ({ id: m.id, name: m.name, dosage: m.dosage, time: m.time, archived: m.archived || false })));
         }
 
         // Contacts
-        const { data: contactsData } = await supabase.from('contacts').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
+        let { data: contactsData } = await supabase.from('contacts').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (contactsData && contactsData.length > 0) {
           setSharedContacts(contactsData.map((c) => ({ id: c.id, name: c.name, relationship: c.relationship, phone: c.phone })));
         }
 
         // Routine
-        const { data: routineData } = await supabase.from('routine_items').select('*').eq('profile_id', session.user.id).order('sort_order', { ascending: true });
+        let { data: routineData } = await supabase.from('routine_items').select('*').eq('profile_id', session.user.id).order('sort_order', { ascending: true });
         if (routineData && routineData.length > 0) {
           const sections = ["Morning", "Afternoon", "Evening"];
           setSharedRoutine(sections.map((section) => ({
@@ -1927,9 +2035,10 @@ function App() {
             items: routineData.filter((r) => r.section === section).map((r) => ({ id: r.id, label: r.label, time: r.time, done: r.done })),
           })));
         }
+        
 
         // Family members
-        const { data: familyData } = await supabase.from('family_members').select('*').eq('profile_id', session.user.id).order('sort_order', { ascending: true });
+        let { data: familyData } = await supabase.from('family_members').select('*').eq('profile_id', session.user.id).order('sort_order', { ascending: true });
         if (familyData && familyData.length > 0) {
           setFamilyMembers(familyData.map((m) => ({ id: m.id, name: m.name, relationship: m.relationship, image: m.image })));
         }
@@ -1962,11 +2071,10 @@ function App() {
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const getCurrentSection = () => { if (hours < 12) return "Morning"; if (hours < 17) return "Afternoon"; return "Evening"; };
   const currentSection = getCurrentSection();
-  const activeReminders = sharedReminders.filter((r) => !r.archived && !r.done);
-  const upcomingReminders = activeReminders.slice(0, 3);
+  const upcomingReminders = sharedReminders.filter((r) => !r.done).slice(0, 3);
   const currentRoutineGroup = sharedRoutine.find((g) => g.section === currentSection);
   const nextRoutineItem = currentRoutineGroup?.items.find((item) => parseTimeToMinutes(item.time) >= currentMinutes);
-  const nextMedication = sharedMedications.filter((m) => !m.archived).find((m) => {
+  const nextMedication = sharedMedications.find((m) => {
     const sectionMap = { Morning: [0, 720], Afternoon: [720, 1020], Evening: [1020, 1200], Night: [1200, 1440] };
     const [start] = sectionMap[m.time] || [0, 1440];
     return start >= currentMinutes;
@@ -1994,18 +2102,24 @@ function App() {
   }
 
   if (!session) return <AuthScreen />;
-  if (showOnboarding) return <OnboardingScreen session={session} onComplete={handleOnboardingComplete} />;
+
+  if (showOnboarding) {
+    return <OnboardingScreen session={session} onComplete={handleOnboardingComplete} />;
+  }
 
   return (
     <div style={{ maxWidth: "390px", margin: "0 auto", fontFamily: "'Inter', sans-serif", backgroundColor: "#fff", minHeight: "100vh" }}>
-      {showWelcome && <WelcomeScreen name={sharedPatientInfo.name} onDone={() => setShowWelcome(false)} />}
+      {showWelcome && (
+        <WelcomeScreen name={sharedPatientInfo.name} onDone={() => setShowWelcome(false)} />
+      )}
       {showSettings && <SettingsScreen onClose={() => setShowSettings(false)} session={session} sharedReminders={sharedReminders} setSharedReminders={setSharedReminders} sharedRoutine={sharedRoutine} setSharedRoutine={setSharedRoutine} sharedMedications={sharedMedications} setSharedMedications={setSharedMedications} sharedContacts={sharedContacts} setSharedContacts={setSharedContacts} sharedPatientInfo={sharedPatientInfo} setSharedPatientInfo={setSharedPatientInfo} familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} />}
       {showReminders && <RemindersOverlay onClose={() => setShowReminders(false)} reminders={sharedReminders} setReminders={setSharedReminders} session={session} />}
       {showRoutine && <RoutineOverlay onClose={() => setShowRoutine(false)} routineData={sharedRoutine} />}
       {showPhotos && <PhotosOverlay onClose={() => setShowPhotos(false)} familyMembers={familyMembers} />}
       {showGames && <GamesOverlay onClose={() => setShowGames(false)} />}
 
-      <div style={{ padding: "44px 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      {/* Header — reduced top padding for height fix */}
+     <div style={{ padding: "44px 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <p style={{ margin: "0 0 2px 0", fontSize: "15px", color: "#aaa" }}>{greeting}</p>
           <h1 style={{ margin: 0, fontSize: "28px", color: "#333", fontWeight: "600" }}>{sharedPatientInfo.name}</h1>
@@ -2013,6 +2127,7 @@ function App() {
         <Settings size={24} color="#aaa" style={{ cursor: "pointer", marginTop: "4px" }} onClick={() => setShowSettings(true)} />
       </div>
 
+      {/* Date/time card — slightly reduced padding */}
       <div style={{ margin: "0 20px 16px 20px", backgroundColor: "#f0f4ff", borderRadius: "20px", padding: "16px 24px" }}>
         <p style={{ margin: "0 0 2px 0", fontSize: "14px", color: "#7a9fd4" }}>{dayName}</p>
         <p style={{ margin: "0 0 10px 0", fontSize: "18px", color: "#333", fontWeight: "500" }}>{monthName} {dateNum}, {year}</p>
@@ -2079,4 +2194,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 
