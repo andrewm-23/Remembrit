@@ -366,6 +366,7 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
   const [editingId, setEditingId] = useState(null);
   const [editLabel, setEditLabel] = useState("");
   const [editTime, setEditTime] = useState("");
+  const [editDate, setEditDate] = useState("");
   const [editRepeat, setEditRepeat] = useState("none");
 
   const toggle = async (id) => {
@@ -387,12 +388,24 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
     setEditingId(reminder.id);
     setEditLabel(reminder.label);
     setEditTime(reminder.time);
+    setEditDate(reminder.date || "");
     setEditRepeat(reminder.repeat || "none");
   };
 
   const saveEdit = async () => {
-    await supabase.from('reminders').update({ label: editLabel, time: editTime, repeat: editRepeat }).eq('id', editingId);
-    setReminders((prev) => prev.map((r) => r.id === editingId ? { ...r, label: editLabel, time: editTime, repeat: editRepeat } : r));
+    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    let displayTime = editTime;
+    let displayDate = editDate;
+    let section = "today";
+    if (editDate) {
+      const d = new Date(editDate + "T00:00:00");
+      const todayMidnight = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+      const picked = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      if (picked > todayMidnight) { section = "upcoming"; displayDate = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`; }
+    }
+    await supabase.from('reminders').update({ label: editLabel, time: displayTime, date: displayDate, repeat: editRepeat, section }).eq('id', editingId);
+    setReminders((prev) => prev.map((r) => r.id === editingId ? { ...r, label: editLabel, time: displayTime, date: displayDate, repeat: editRepeat, section } : r));
     setEditingId(null);
   };
 
@@ -421,7 +434,11 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
         <div style={{ padding: "14px 20px", borderBottom: "1px solid #f0f0f0", backgroundColor: "#fafafa" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             <input style={inputStyle} value={editLabel} onChange={(e) => setEditLabel(e.target.value)} placeholder="Reminder title" />
+            <p style={{ margin: "0 0 4px 0", fontSize: "12px", color: "#aaa" }}>
+              Current: {reminder.time || "no time"}{reminder.date ? ` · ${reminder.date}` : ""}
+            </p>
             <input type="time" style={inputStyle} value={editTime} onChange={(e) => setEditTime(e.target.value)} />
+            <input type="date" style={inputStyle} value={editDate} onChange={(e) => setEditDate(e.target.value)} />
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
               {repeatOptions.map((opt) => (
                 <button key={opt.value} onClick={() => setEditRepeat(opt.value)} style={{ padding: "6px 12px", borderRadius: "20px", border: "1px solid", borderColor: editRepeat === opt.value ? "#4a90e2" : "#eee", backgroundColor: editRepeat === opt.value ? "#eef4ff" : "#fff", color: editRepeat === opt.value ? "#4a90e2" : "#888", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}>{opt.label}</button>
