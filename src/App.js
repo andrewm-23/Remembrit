@@ -1771,15 +1771,15 @@ function WeatherCard() {
         const code = data.current_weather.weathercode;
         const temp = Math.round(data.current_weather.temperature);
         const getCondition = (c) => {
-          if (c === 0) return { label: "Clear", color: "#f5a623" };
-          if (c <= 2) return { label: "Mostly Clear", color: "#f5a623" };
-          if (c === 3) return { label: "Overcast", color: "#888" };
-          if (c <= 48) return { label: "Foggy", color: "#aaa" };
-          if (c <= 55) return { label: "Drizzle", color: "#4a90e2" };
-          if (c <= 65) return { label: "Rain", color: "#4a90e2" };
-          if (c <= 75) return { label: "Snow", color: "#88c0d0" };
-          if (c <= 82) return { label: "Showers", color: "#4a90e2" };
-          return { label: "Thunderstorm", color: "#7c5cbf" };
+          if (c === 0) return { label: "Clear", color: "#f5a623", image: "https://images.unsplash.com/photo-1601297183305-6df142704ea2?w=800&q=80" };
+          if (c <= 2) return { label: "Mostly Clear", color: "#f5a623", image: "https://images.unsplash.com/photo-1601297183305-6df142704ea2?w=800&q=80" };
+          if (c === 3) return { label: "Overcast", color: "#ccc", image: "https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=800&q=80" };
+          if (c <= 48) return { label: "Foggy", color: "#ccc", image: "https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227?w=800&q=80" };
+          if (c <= 55) return { label: "Drizzle", color: "#a0c4e8", image: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&q=80" };
+          if (c <= 65) return { label: "Rain", color: "#a0c4e8", image: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&q=80" };
+          if (c <= 75) return { label: "Snow", color: "#e0f0ff", image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80" };
+          if (c <= 82) return { label: "Showers", color: "#a0c4e8", image: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&q=80" };
+          return { label: "Thunderstorm", color: "#d0c0f0", image: "https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=800&q=80" };
         };
         setWeather({ temp, condition: getCondition(code), code });
       } catch {
@@ -1789,33 +1789,43 @@ function WeatherCard() {
   }, []);
 
   const WeatherIcon = ({ code, color }) => {
-    const s = { color, flexShrink: 0 };
-    if (code === 0) return <Sun size={48} style={s} />;
-    if (code <= 2) return <CloudSun size={48} style={s} />;
-    if (code === 3) return <Cloud size={48} style={s} />;
-    if (code <= 48) return <Cloud size={48} style={{ ...s, color: "#aaa" }} />;
-    if (code <= 65) return <CloudRain size={48} style={s} />;
-    if (code <= 75) return <CloudSnow size={48} style={s} />;
-    if (code <= 82) return <CloudRain size={48} style={s} />;
-    return <CloudLightning size={48} style={s} />;
+    const s = { color, flexShrink: 0, filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.3))" };
+    if (code === 0) return <Sun size={52} style={s} />;
+    if (code <= 2) return <CloudSun size={52} style={s} />;
+    if (code === 3) return <Cloud size={52} style={s} />;
+    if (code <= 48) return <Cloud size={52} style={{ ...s, color: "#ddd" }} />;
+    if (code <= 65) return <CloudRain size={52} style={s} />;
+    if (code <= 75) return <CloudSnow size={52} style={s} />;
+    if (code <= 82) return <CloudRain size={52} style={s} />;
+    return <CloudLightning size={52} style={s} />;
   };
 
   if (error) return null;
 
   return (
-    <div style={{ margin: "0 20px 16px 20px", backgroundColor: "#f0f4ff", borderRadius: "20px", padding: "18px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      {weather ? (
-        <>
-          <div>
-            <p style={{ margin: "0 0 2px 0", fontSize: "14px", color: "#7a9fd4" }}>Current Weather</p>
-            <p style={{ margin: 0, fontSize: "36px", fontWeight: "700", color: "#333" }}>{weather.temp}°F</p>
-            <p style={{ margin: "4px 0 0 0", fontSize: "15px", color: "#7a9fd4" }}>{weather.condition.label}</p>
-          </div>
-          <WeatherIcon code={weather.code} color={weather.condition.color} />
-        </>
-      ) : (
-        <p style={{ margin: 0, fontSize: "15px", color: "#aaa" }}>Loading weather...</p>
+    <div style={{ margin: "0 20px 16px 20px", borderRadius: "20px", overflow: "hidden", position: "relative", height: "110px" }}>
+      {weather && (
+        <img
+          src={weather.condition.image}
+          alt={weather.condition.label}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
       )}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 100%)" }} />
+      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px", height: "100%", boxSizing: "border-box" }}>
+        {weather ? (
+          <>
+            <div>
+              <p style={{ margin: "0 0 2px 0", fontSize: "13px", color: "rgba(255,255,255,0.8)", fontWeight: "500" }}>Current Weather</p>
+              <p style={{ margin: 0, fontSize: "36px", fontWeight: "700", color: "white" }}>{weather.temp}°F</p>
+              <p style={{ margin: "2px 0 0 0", fontSize: "14px", color: "rgba(255,255,255,0.85)" }}>{weather.condition.label}</p>
+            </div>
+            <WeatherIcon code={weather.code} color={weather.condition.color} />
+          </>
+        ) : (
+          <p style={{ margin: 0, fontSize: "15px", color: "rgba(255,255,255,0.7)" }}>Loading weather...</p>
+        )}
+      </div>
     </div>
   );
 }
