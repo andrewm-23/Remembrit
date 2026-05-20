@@ -2003,7 +2003,6 @@ function App() {
         // Reminders
         let { data: remindersData } = await supabase.from('reminders').select('*').eq('profile_id', session.user.id).order('created_at', { ascending: true });
         if (remindersData && remindersData.length > 0) {
-          const today = new Date().toDateString();
           const toArchive = remindersData.filter((r) => r.done && !r.archived);
           if (toArchive.length > 0) {
             await Promise.all(toArchive.map((r) => supabase.from('reminders').update({ archived: true }).eq('id', r.id)));
