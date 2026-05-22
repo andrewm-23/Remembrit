@@ -1133,7 +1133,6 @@ function SettingsPage({ title, onClose, children }) {
 function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders, sharedRoutine, setSharedRoutine, sharedMedications, setSharedMedications, sharedContacts, setSharedContacts, sharedPatientInfo, setSharedPatientInfo, familyMembers, setFamilyMembers }) {
   useBodyScrollLock(true);
   const [page, setPage] = useState(null);
-  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   if (page === "photos") return <FamilyMembersPage familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} session={session} onBack={() => setPage(null)} />;
 
