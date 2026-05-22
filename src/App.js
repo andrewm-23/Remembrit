@@ -1018,7 +1018,6 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
 function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminders, sharedRoutine, setSharedRoutine, sharedMedications, setSharedMedications, sharedContacts, setSharedContacts, sharedPatientInfo, setSharedPatientInfo, familyMembers, setFamilyMembers }) {
   useBodyScrollLock(true);
   const [activePage, setActivePage] = useState(null);
-  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const reminders = sharedReminders;
   const setReminders = setSharedReminders;
