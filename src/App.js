@@ -412,14 +412,12 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
     if (!reminder) return;
     const nowDone = !reminder.done;
     await supabase.from('reminders').update({ done: nowDone }).eq('id', id);
-    setReminders((prev) => prev.map((r) => {
-      if (r.id !== id) return r;
-      if (nowDone) {
-        await supabase.from('reminders').update({ archived: true }).eq('id', id);
-        setReminders((curr) => curr.map((x) => x.id === id ? { ...x, archived: true } : x));
-      }
-      return { ...r, done: nowDone };
-    }));
+    if (nowDone) {
+      await supabase.from('reminders').update({ archived: true }).eq('id', id);
+      setReminders((prev) => prev.map((r) => r.id === id ? { ...r, done: true, archived: true } : r));
+    } else {
+      setReminders((prev) => prev.map((r) => r.id === id ? { ...r, done: false } : r));
+    }
   };
 
   const startEdit = (reminder) => {
@@ -565,7 +563,6 @@ function MedArchiveSection({ medications, setMedicationList }) {
                 <p style={{ margin: 0, fontSize: "12px", color: "#ccc" }}>{m.dosage} — {m.time}</p>
               </div>
               <button onClick={() => restore(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#4a90e2", fontSize: "13px", fontFamily: "inherit", fontWeight: "500" }}>Restore</button>
-              <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px" }}>✕</button>
               <button onClick={() => deleteMed(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ccc", fontSize: "20px" }}>✕</button>
             </div>
           ))}
@@ -1021,6 +1018,7 @@ function CaregiverRoutinePage({ routineData, setRoutineData, session, onBack }) 
 function CaregiverDashboard({ onLock, session, sharedReminders, setSharedReminders, sharedRoutine, setSharedRoutine, sharedMedications, setSharedMedications, sharedContacts, setSharedContacts, sharedPatientInfo, setSharedPatientInfo, familyMembers, setFamilyMembers }) {
   useBodyScrollLock(true);
   const [activePage, setActivePage] = useState(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const reminders = sharedReminders;
   const setReminders = setSharedReminders;
@@ -1464,14 +1462,12 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
     if (!reminder) return;
     const nowDone = !reminder.done;
     await supabase.from('reminders').update({ done: nowDone }).eq('id', id);
-    setReminders((prev) => prev.map((r) => {
-      if (r.id !== id) return r;
-      if (nowDone) {
-        await supabase.from('reminders').update({ archived: true }).eq('id', id);
-        setReminders((curr) => curr.map((x) => x.id === id ? { ...x, archived: true } : x));
-      }
-      return { ...r, done: nowDone };
-    }));
+    if (nowDone) {
+      await supabase.from('reminders').update({ archived: true }).eq('id', id);
+      setReminders((prev) => prev.map((r) => r.id === id ? { ...r, done: true, archived: true } : r));
+    } else {
+      setReminders((prev) => prev.map((r) => r.id === id ? { ...r, done: false } : r));
+    }
   };
 
   const now = new Date();
