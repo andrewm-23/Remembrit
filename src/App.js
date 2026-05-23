@@ -468,8 +468,7 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
     return r.section === "today" && !r.done && mins !== null && mins < currentMinutes;
   });
   const todayItems = activeReminders.filter((r) => {
-    const mins = parseToMinutes(r.time);
-    return r.section === "today" && !overdueItems.includes(r);
+    return r.section === "today" && !r.done && !overdueItems.includes(r);
   });
   const upcomingItems = activeReminders.filter((r) => r.section === "upcoming");
   const repeatLabel = (val) => { const f = repeatOptions.find((o) => o.value === val); return f && val !== "none" ? f.label : null; };
@@ -764,7 +763,7 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
   const addMember = async () => {
     if (!newName.trim()) return;
     setUploading(true);
-    let imageUrl = `https://picsum.photos/seed/${newName}/400/600`;
+    let imageUrl = "";
     if (newImageFile) {
       const uploaded = await uploadToStorage(newImageFile, session.user.id, 'family');
       if (uploaded) imageUrl = uploaded;
@@ -788,7 +787,7 @@ function FamilyMembersPage({ familyMembers, setFamilyMembers, session, onBack })
         {familyMembers.map((member) => (
           <div key={member.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
             <div style={{ width: "52px", height: "52px", borderRadius: "50%", overflow: "hidden", flexShrink: 0, backgroundColor: "#ddd" }}>
-              <img src={member.image} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              {member.image ? <img src={member.image} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ width: "100%", height: "100%", backgroundColor: "#c8d8f5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", color: "#4a90e2", fontWeight: "600" }}>{member.name.charAt(0)}</div>}
             </div>
             <div style={{ flex: 1 }}>
               <p style={{ margin: "0 0 2px 0", fontSize: "16px", color: "#333" }}>{member.name}</p>
@@ -1156,8 +1155,6 @@ function SettingsPage({ title, onClose, children }) {
 function SettingsScreen({ onClose, session, sharedReminders, setSharedReminders, sharedRoutine, setSharedRoutine, sharedMedications, setSharedMedications, sharedContacts, setSharedContacts, sharedPatientInfo, setSharedPatientInfo, familyMembers, setFamilyMembers }) {
   useBodyScrollLock(true);
   const [page, setPage] = useState(null);
-
-  if (page === "photos") return <FamilyMembersPage familyMembers={familyMembers} setFamilyMembers={setFamilyMembers} session={session} onBack={() => setPage(null)} />;
 
   if (page === "personal") {
     const computedAge = sharedPatientInfo.birthday ? (() => {
@@ -1793,8 +1790,9 @@ function WordScrambleGame() {
     for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
     return arr.join("") === word ? scramble(word) : arr;
   };
-  const [word, setWord] = useState(pickWord);
-  const [tiles, setTiles] = useState(() => scramble(pickWord()));
+  const initialWord = pickWord();
+  const [word, setWord] = useState(initialWord);
+  const [tiles, setTiles] = useState(() => scramble(initialWord));
   const [chosen, setChosen] = useState([]);
   const [result, setResult] = useState(null);
 
@@ -2105,10 +2103,10 @@ function App() {
   const upcomingReminders = sharedReminders.filter((r) => !r.done && !r.archived).slice(0, 3);
   const currentRoutineGroup = sharedRoutine.find((g) => g.section === currentSection);
   const nextRoutineItem = currentRoutineGroup?.items.find((item) => parseTimeToMinutes(item.time) >= currentMinutes);
-  const nextMedication = sharedMedications.find((m) => {
+  const nextMedication = sharedMedications.filter((m) => !m.archived).find((m) => {
     const sectionMap = { Morning: [0, 720], Afternoon: [720, 1020], Evening: [1020, 1200], Night: [1200, 1440] };
-    const [start] = sectionMap[m.time] || [0, 1440];
-    return start >= currentMinutes;
+    const [start, end] = sectionMap[m.time] || [0, 1440];
+    return currentMinutes >= start && currentMinutes < end;
   });
 
   const handleMenuClick = (label) => {
