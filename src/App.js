@@ -441,8 +441,9 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
       if (picked > todayMidnight) { section = "upcoming"; displayDate = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`; }
     }
     await supabase.from('reminders').update({ label: editLabel, time: displayTime, date: displayDate, repeat: editRepeat, section }).eq('id', editingId);
-    setReminders((prev) => prev.map((r) => r.id === editingId ? { ...r, label: editLabel, time: displayTime, date: displayDate, repeat: editRepeat, section } : r));
+    const updatedId = editingId;
     setEditingId(null);
+    setReminders((prev) => prev.map((r) => r.id === updatedId ? { ...r, label: editLabel, time: displayTime, date: displayDate, repeat: editRepeat, section } : r));
   };
 
   const deleteReminder = async (id) => {
@@ -453,7 +454,23 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
   const cancelEdit = () => setEditingId(null);
   const activeReminders = reminders.filter((r) => !r.archived);
   const archivedReminders = reminders.filter((r) => r.archived);
-  const todayItems = activeReminders.filter((r) => r.section === "today");
+  const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+  const parseToMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    const [t, ap] = timeStr.split(" ");
+    let [h, m] = t.split(":").map(Number);
+    if (ap === "PM" && h !== 12) h += 12;
+    if (ap === "AM" && h === 12) h = 0;
+    return h * 60 + m;
+  };
+  const overdueItems = activeReminders.filter((r) => {
+    const mins = parseToMinutes(r.time);
+    return r.section === "today" && !r.done && mins !== null && mins < currentMinutes;
+  });
+  const todayItems = activeReminders.filter((r) => {
+    const mins = parseToMinutes(r.time);
+    return r.section === "today" && !overdueItems.includes(r);
+  });
   const upcomingItems = activeReminders.filter((r) => r.section === "upcoming");
   const repeatLabel = (val) => { const f = repeatOptions.find((o) => o.value === val); return f && val !== "none" ? f.label : null; };
 
@@ -515,16 +532,10 @@ function CaregiverRemindersPage({ reminders, setReminders, session, onBack }) {
           <X size={24} color="#555" style={{ cursor: "pointer", marginRight: "16px" }} onClick={onBack} />
           <h2 style={{ margin: 0, fontSize: "20px", color: "#333" }}>Reminders</h2>
         </div>
-        {activeReminders.filter((r) => {
-  const mins = r.time ? (() => { const [t, ap] = r.time.split(" "); let [h, m] = t.split(":").map(Number); if (ap === "PM" && h !== 12) h += 12; if (ap === "AM" && h === 12) h = 0; return h * 60 + m; })() : null;
-  return r.section === "today" && !r.done && mins !== null && mins < new Date().getHours() * 60 + new Date().getMinutes();
-}).length > 0 && (
+        {overdueItems.length > 0 && (
   <>
     <SectionLabel label="Overdue" color="#e25555" />
-    {activeReminders.filter((r) => {
-      const mins = r.time ? (() => { const [t, ap] = r.time.split(" "); let [h, m] = t.split(":").map(Number); if (ap === "PM" && h !== 12) h += 12; if (ap === "AM" && h === 12) h = 0; return h * 60 + m; })() : null;
-      return r.section === "today" && !r.done && mins !== null && mins < new Date().getHours() * 60 + new Date().getMinutes();
-    }).map((r) => <ReminderItem key={r.id} reminder={r} />)}
+    {overdueItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}
   </>
 )}
 {todayItems.length > 0 && <><SectionLabel label="Today" />{todayItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
@@ -1538,7 +1549,7 @@ function RemindersOverlay({ onClose, reminders, setReminders, session }) {
 )}
         {todayItems.length > 0 && <><SectionLabel label="Today" />{todayItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
         {upcomingItems.length > 0 && <><SectionLabel label="Upcoming" />{upcomingItems.map((r) => <ReminderItem key={r.id} reminder={r} />)}</>}
-        {reminders.length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
+        {reminders.filter((r) => !r.archived).length === 0 && <p style={{ textAlign: "center", color: "#aaa", fontSize: "16px", marginTop: "60px" }}>No reminders yet.</p>}
         <div style={{ padding: "20px" }}>
           <button onClick={() => setShowAddSheet(true)} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: "14px", borderRadius: "12px", backgroundColor: "#f5f5f5", border: "none", fontSize: "16px", color: "#555", cursor: "pointer", fontFamily: "inherit" }}>
             <Plus size={18} color="#555" /> Add Reminder
@@ -2091,7 +2102,7 @@ function App() {
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const getCurrentSection = () => { if (hours < 12) return "Morning"; if (hours < 17) return "Afternoon"; return "Evening"; };
   const currentSection = getCurrentSection();
-  const upcomingReminders = sharedReminders.filter((r) => !r.done).slice(0, 3);
+  const upcomingReminders = sharedReminders.filter((r) => !r.done && !r.archived).slice(0, 3);
   const currentRoutineGroup = sharedRoutine.find((g) => g.section === currentSection);
   const nextRoutineItem = currentRoutineGroup?.items.find((item) => parseTimeToMinutes(item.time) >= currentMinutes);
   const nextMedication = sharedMedications.find((m) => {
